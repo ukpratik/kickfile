@@ -1,0 +1,10 @@
+kickFile test build for macOS
+
+1. Drag kickFile into Applications.
+2. Open it. macOS says it can't check kickFile for malicious software,
+   because test builds aren't notarised yet. Click Done (or Cancel).
+3. Open System Settings > Privacy & Security, scroll down and click
+   "Open Anyway" next to kickFile, then confirm.
+4. When macOS asks to let kickFile find devices on your local network, click Allow.
+
+You only do this once. Release builds will be signed and notarised.

@@ -105,10 +105,21 @@ jobs:
           channel: stable
           cache: true
       - run: flutter build macos --release
-      # ditto keeps the framework symlinks that upload-artifact would flatten.
-      - run: ditto -c -k --keepParent build/macos/Build/Products/Release/kickFile.app kickFile-macos.zip
+      # Fail here, not on the tester's Mac, if the bundle or its ad-hoc signature is broken.
+      - run: codesign -v --deep --strict build/macos/Build/Products/Release/kickFile.app
+      # A DMG keeps the bundle intact (framework symlinks) through the artifact zip.
+      # Test builds are ad-hoc signed: Gatekeeper asks once (see "First open" in the DMG).
+      # Developer ID signing and notarisation come with the release builds (Phase 8, A-18).
+      - name: Package DMG
+        run: |
+          mkdir -p dmg
+          cp -R build/macos/Build/Products/Release/kickFile.app dmg/
+          ln -s /Applications dmg/Applications
+          cp ../.github/macos-first-open.txt "dmg/First open.txt"
+          hdiutil create -volname kickFile -srcfolder dmg -ov -format UDZO kickFile-macos.dmg
+          hdiutil verify kickFile-macos.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: kickfile-macos
-          path: app/kickFile-macos.zip
+          path: app/kickFile-macos.dmg
           retention-days: 7
