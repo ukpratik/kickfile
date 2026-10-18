@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import '../core/errors.dart';
 import '../core/log.dart';
 import '../core/names.dart';
+import '../core/protocol.dart';
 import 'file_access.dart';
 
 /// dart:io implementation for desktop (and tests). Partials live in a hidden
@@ -13,10 +14,31 @@ import 'file_access.dart';
 class IoFileAccess implements FileAccess {
   IoFileAccess(this.saveDir);
 
-  /// Where received files go, e.g. `~/Downloads/kickFile`.
-  final String saveDir;
+  /// Where received files go, e.g. `~/Downloads/kickFile`. Changeable in Settings.
+  String saveDir;
 
   String get partialRoot => p.join(saveDir, '.kickfile-partial');
+
+  /// Walks a folder the user picked into files and (empty) folders, keeping
+  /// the folder's own name as the top of every relative path.
+  Stream<SendSource> expandFolder(String folderPath) async* {
+    final root = Directory(folderPath);
+    final base = p.dirname(root.absolute.path);
+    yield SendSource(kind: ItemKind.dir, relPath: _rel(root.path, base));
+    await for (final e in root.list(recursive: true, followLinks: false)) {
+      final name = p.basename(e.path);
+      if (name == '.DS_Store' || name == 'Thumbs.db' || name == 'desktop.ini') continue;
+      final rel = _rel(e.path, base);
+      if (e is Directory) {
+        yield SendSource(kind: ItemKind.dir, relPath: rel);
+      } else if (e is File) {
+        final st = await e.stat();
+        yield SendSource(kind: ItemKind.file, relPath: rel, ref: e.path, size: st.size, mtime: st.modified.millisecondsSinceEpoch);
+      }
+    }
+  }
+
+  String _rel(String path, String base) => p.split(p.relative(p.absolute(path), from: base)).join('/');
 
   // ---- sending ----
 

@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "io.github.ukpratik" "\0"
-            VALUE "FileDescription", "kickfile" "\0"
+            VALUE "CompanyName", "Pratik Ukey" "\0"
+            VALUE "FileDescription", "kickFile" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "kickfile" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 io.github.ukpratik. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Pratik Ukey. All rights reserved." "\0"
             VALUE "OriginalFilename", "kickfile.exe" "\0"
-            VALUE "ProductName", "kickfile" "\0"
+            VALUE "ProductName", "kickFile" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = kickfile
+PRODUCT_NAME = kickFile
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = io.github.ukpratik.kickfile
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 io.github.ukpratik. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Pratik Ukey. All rights reserved.
