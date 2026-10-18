@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/discovery.dart';
@@ -44,8 +45,29 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Countdowns and "searching" need a 1 s heartbeat.
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      _announceProgress();
+      setState(() {});
     });
+  }
+
+  /// Screen readers hear progress at 25 % steps, not every update (NFR-011).
+  final _announced = <String, int>{};
+  void _announceProgress() {
+    final s = context.services;
+    final items = <(String, String, int, int)>[
+      for (final j in s.node.transfers.activeJobs) (j.id, 'Sending to ${j.peerName}', j.sentBytes, j.totalBytes),
+      if (s.node.receiver.session case final r? when r.state == SessionState.active)
+        (r.id, 'Receiving from ${r.senderName}', r.receivedBytes, r.totalBytes),
+    ];
+    for (final (id, what, done, total) in items) {
+      if (total <= 0) continue;
+      final quarter = (done * 4 ~/ total).clamp(0, 4);
+      if (quarter > (_announced[id] ?? 0) && quarter < 4) {
+        _announced[id] = quarter;
+        unawaited(SemanticsService.sendAnnouncement(View.of(context), '$what, ${quarter * 25} percent', TextDirection.ltr));
+      }
+    }
   }
 
   @override

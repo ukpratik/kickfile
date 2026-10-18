@@ -38,6 +38,27 @@ class _ConnectionHelpScreenState extends State<ConnectionHelpScreen> {
     await context.services.discovery.refresh();
   }
 
+  /// Windows: add inbound rules for kickFile on private and public networks (US-011 v2.2).
+  Future<void> _allowFirewall() async {
+    final exe = Platform.resolvedExecutable.replaceAll("'", "''");
+    final rule = "netsh advfirewall firewall add rule name='kickFile' dir=in action=allow program='$exe' enable=yes profile=private,public";
+    try {
+      final r = await Process.run('powershell', [
+        '-NoProfile',
+        '-Command',
+        'Start-Process -FilePath powershell -Verb RunAs -Wait -WindowStyle Hidden -ArgumentList "-NoProfile","-Command","$rule"',
+      ]);
+      if (!mounted) return;
+      context.ui.toast(r.exitCode == 0
+          ? 'kickFile is allowed. Try finding your device again.'
+          : "Couldn't change the firewall. Ask an administrator to allow kickFile in Windows Security › Firewall.");
+    } catch (_) {
+      if (mounted) {
+        context.ui.toast("Couldn't change the firewall. Ask an administrator to allow kickFile in Windows Security › Firewall.");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = context.services;
@@ -84,7 +105,14 @@ class _ConnectionHelpScreenState extends State<ConnectionHelpScreen> {
                   child: const Text('Make visible'),
                 ),
               ),
-              if (Platform.isWindows || Platform.isLinux)
+              if (Platform.isWindows)
+                _ReminderRow(
+                  icon: LucideIcons.shield,
+                  title: 'Your laptop may be blocking kickFile',
+                  text: 'If Windows asked about kickFile and you chose Cancel, allow it now. Windows will ask for an administrator.',
+                  action: TextButton(onPressed: _allowFirewall, child: const Text('Allow it')),
+                ),
+              if (Platform.isLinux)
                 const _ReminderRow(
                   icon: LucideIcons.shield,
                   title: 'Your firewall may be blocking kickFile',
@@ -168,9 +196,10 @@ class _CheckRow extends StatelessWidget {
 }
 
 class _ReminderRow extends StatelessWidget {
-  const _ReminderRow({required this.icon, required this.title, required this.text});
+  const _ReminderRow({required this.icon, required this.title, required this.text, this.action});
   final IconData icon;
   final String title, text;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +217,7 @@ class _ReminderRow extends StatelessWidget {
               children: [
                 Text(title, style: tt.bodyLarge!.copyWith(fontWeight: FontWeight.w600)),
                 Text(text, style: tt.bodySmall),
+                ?action,
               ],
             ),
           ),

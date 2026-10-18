@@ -201,7 +201,8 @@ class SendJobCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(KfSpace.s4),
         child: Semantics(
-          liveRegion: true,
+          // Live only while waiting; progress is announced at 25 % steps by the home screen.
+          liveRegion: job.state != SendState.active,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
