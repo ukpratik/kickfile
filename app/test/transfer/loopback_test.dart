@@ -159,7 +159,10 @@ void main() {
     await waitFor(() => b.node.receiver.session == null);
     expect(job.state, SendState.cancelled);
     expect(job.cancelledByPeer, isFalse);
+    // Let any late "paused" bookkeeping from the dropped upload settle; cancel must win.
+    await Future<void>.delayed(const Duration(milliseconds: 500));
     expect(b.node.history.byId(job.id, Direction.incoming)!.status, HistoryStatus.cancelled);
+    expect(File(p.join(b.root.path, 'data', 'partials', '${job.id}.json')).existsSync(), isFalse);
     expect(await b.received('big.bin').exists(), isFalse);
     expect(await Directory(p.join(b.saveDir, '.kickfile-partial', job.id)).exists(), isFalse);
   });

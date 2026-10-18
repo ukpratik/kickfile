@@ -51,8 +51,10 @@ class JsonFile {
     });
   }
 
-  Future<void> delete() async {
-    await _queue;
-    if (await file.exists()) await file.delete();
-  }
+  /// Deletes after any queued write, so a late write can't bring the file back.
+  Future<void> delete() => _queue = _queue.then((_) async {
+    try {
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
+  });
 }

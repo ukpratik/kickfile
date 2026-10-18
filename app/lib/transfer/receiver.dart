@@ -557,6 +557,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
     _paused.remove(s.id);
     await files.removeTransferPartials(s.id);
     await _manifestFile(s.id).delete();
+    _manifests.remove(s.id);
     await _history(s, status, finished: true);
     lastFinished = s;
     _completed.add(s);
@@ -571,10 +572,13 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
   }
 
   Future<void> _pause(IncomingSession s) async {
+    if (s.state != SessionState.active) return;
     s.state = SessionState.paused;
     if (session == s) session = null;
     _paused[s.id] = s;
     await _saveManifest(s);
+    // A cancel or finish may have landed while we were writing: don't overwrite its result.
+    if (s.state != SessionState.paused) return;
     await _history(s, HistoryStatus.paused);
     notifyListeners();
   }
@@ -647,7 +651,10 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
     );
   }
 
-  JsonFile _manifestFile(String id) => JsonFile(File(p.join(manifestDir.path, '$id.json')));
+  // One JsonFile per transfer so writes and the final delete are serialised.
+  final _manifests = <String, JsonFile>{};
+  JsonFile _manifestFile(String id) =>
+      _manifests.putIfAbsent(id, () => JsonFile(File(p.join(manifestDir.path, '$id.json'))));
 
   void _scheduleSave(IncomingSession s) {
     _saveTimer?.cancel();
