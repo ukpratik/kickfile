@@ -1,0 +1,14 @@
+.DS_Store
+*.log
+# release outputs live in ~/Desktop/PersonalProjects/builds, never in git
+*.apk
+*.aab
+*.dmg
+*.msix
+*.AppImage
+*.deb
+# secrets
+*.jks
+*.keystore
+key.properties
+.env
