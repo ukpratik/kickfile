@@ -12,3 +12,6 @@
 *.keystore
 key.properties
 .env
+
+# local test builds (not releases)
+test-builds/
