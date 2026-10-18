@@ -102,5 +102,6 @@ String errorText(KfErrorCode? code, {String device = 'The other device'}) => swi
   KfErrorCode.versionMismatch => 'Update kickFile on $device to send files.',
   KfErrorCode.badSecret => 'This code has expired. Show a new one.',
   KfErrorCode.invalidOffer => "These files can't be sent as they are.",
+  KfErrorCode.unauthorized => "$device couldn't confirm this device. Check the date and time are right on both devices.",
   _ => 'Something went wrong. Try again.',
 };
