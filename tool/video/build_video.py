@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Builds the kickFile how-to video: 1920x1080, captions + macOS 'say' narration.
 
 Scenes are either a rendered desktop screen (PNG from test/video) in a Mac/Windows

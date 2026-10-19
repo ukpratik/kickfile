@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import '../core/protocol.dart';
 
 /// Something the user chose to send.

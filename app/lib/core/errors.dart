@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /// Every failure the engine reports. The UI maps codes to the design copy.
 enum KfErrorCode {
   declined(403),

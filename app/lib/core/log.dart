@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:io';
 
 /// Minimal rotating logger. Never log file names, file contents or IP addresses

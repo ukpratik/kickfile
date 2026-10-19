@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 
 /// Colour tokens from `product/04-design/final/assets/tokens.css` (purple, D-014).
