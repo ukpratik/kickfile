@@ -31,4 +31,9 @@ jobs:
           "MANIFEST=$((Get-ChildItem -Directory -Recurse packaging/winget/manifests | Where-Object { Test-Path "$($_.FullName)/*.installer.yaml" } | Sort-Object FullName | Select-Object -Last 1).FullName)" >> $env:GITHUB_ENV
       - name: Validate
         timeout-minutes: 5
-        run: winget validate --manifest $env:MANIFEST --disable-interactivity
+        run: |
+          $out = winget validate --manifest $env:MANIFEST --disable-interactivity | Out-String
+          Write-Host $out
+          # A runner's winget may be older than the schema header; warnings are fine, errors are not.
+          if ($out -notmatch 'Manifest validation succeeded') { exit 1 }
+          exit 0
