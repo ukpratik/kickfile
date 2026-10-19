@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:convert';
 import 'dart:io';
 
@@ -14,6 +15,7 @@ import '../scope.dart';
 import '../theme/theme.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import 'add_device.dart';
 import 'connection_help.dart';
 
 /// Settings (US-015, M-13 / D-07). Desktop: an in-window page.
@@ -178,6 +180,11 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ConnectionHelpScreen())),
                   ),
                   ListTile(
+                    leading: const Icon(LucideIcons.download),
+                    title: const Text('Get kickFile on other devices'),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AddDeviceScreen())),
+                  ),
+                  ListTile(
                     leading: const Icon(LucideIcons.fileText),
                     title: const Text('Export logs'),
                     subtitle: const Text('Saves a diagnostic file you can choose to share. No file names inside.'),
@@ -193,6 +200,12 @@ class SettingsScreen extends StatelessWidget {
                     title: const Text('About kickFile'),
                     subtitle: Text('Version 1.0.0 · protocol v$kProtocolVersion'),
                     onTap: () => showLicensePage(context: context, applicationName: 'kickFile', applicationVersion: '1.0.0'),
+                  ),
+                  ListTile(
+                    leading: const Icon(LucideIcons.codeXml),
+                    title: const Text('Source code and website'),
+                    subtitle: const Text('Free and open source, GPL-3.0-or-later'),
+                    onTap: () => context.services.os.open('https://github.com/ukpratik/kickfile'),
                   ),
                 ],
               ),

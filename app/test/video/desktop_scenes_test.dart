@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 @Tags(['video'])
 library;
 
@@ -17,6 +18,7 @@ import 'package:kickfile/transfer/file_access.dart';
 import 'package:kickfile/transfer/receiver.dart';
 import 'package:kickfile/ui/controller.dart';
 import 'package:kickfile/ui/scope.dart';
+import 'package:kickfile/ui/screens/add_device.dart';
 import 'package:kickfile/ui/screens/connection_help.dart';
 import 'package:kickfile/ui/screens/home.dart';
 import 'package:kickfile/ui/screens/incoming_prompt.dart';
@@ -126,6 +128,10 @@ void main() {
         File(p.join(outDir!, '$name.png')).writeAsBytesSync(png!.buffer.asUint8List());
       });
     }
+
+    // Guide page (README screenshots), first: before discovery's 30 s subnet probe can fire.
+    await shot('mac_get', macSvc, UiController(macSvc), const AddDeviceScreen(current: DevicePlatform.macos));
+    await shot('mac_get_android', macSvc, UiController(macSvc), const AddDeviceScreen(current: DevicePlatform.macos, expanded: {DevicePlatform.android}));
 
     // 1-2 · Mac first run.
     await t.runAsync(() => mac.node.settings.update((x) => x.copyWith(onboarded: false)));

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -283,6 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: const Icon(LucideIcons.qrCode, size: 18),
                     label: const Text('Connect with a QR code'),
                   ),
+                  TextButton(onPressed: () => _push(const AddDeviceScreen()), child: const Text('Get kickFile on the other device')),
                 ],
               ),
             for (final (peer, live) in devices)
@@ -504,9 +506,14 @@ class _GetPhoneCard extends StatelessWidget {
                 children: [
                   Text('Get kickFile on your phone', style: tt.titleMedium),
                   const SizedBox(height: 2),
-                  Text("Scan with your phone's camera. The page picks the right store.", style: tt.bodySmall),
+                  Text("Scan with your phone's camera. The page picks the right download.", style: tt.bodySmall),
                   const SizedBox(height: KfSpace.s2),
                   Text('Already have it? Open kickFile on your phone, on the same Wi-Fi.', style: tt.bodySmall),
+                  TextButton(
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 36)),
+                    onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AddDeviceScreen())),
+                    child: const Text('All platforms and stores'),
+                  ),
                 ],
               ),
             ),
