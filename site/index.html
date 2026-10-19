@@ -40,14 +40,15 @@
       <p>macOS 12 or later, Apple silicon or Intel</p>
       <ul>
         <li><a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-macos.dmg">DMG</a> (GitHub)</li>
-        <li>Homebrew <span class="soon">Coming soon</span></li>
+        <li>Homebrew: <code>brew install --cask ukpratik/tap/kickfile</code></li>
       </ul>
     </div>
     <div class="card">
       <h3>Windows PC</h3>
       <p>Windows 10 or 11, 64-bit</p>
       <ul>
-        <li><a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-windows-x64.zip">Zip file</a> (GitHub)</li>
+        <li><a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-windows-x64-setup.exe">Installer</a> or <a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-windows-x64.zip">zip</a> (GitHub)</li>
+        <li>Scoop: <code>scoop bucket add ukpratik https://github.com/ukpratik/scoop-bucket</code>, then <code>scoop install ukpratik/kickfile</code></li>
         <li>winget <span class="soon">Coming soon</span></li>
         <li>Microsoft Store <span class="soon">Coming soon</span></li>
       </ul>
@@ -79,7 +80,7 @@
   <p>kickFile isn't notarised by Apple yet, so macOS blocks the first launch. Open it once, then go to <strong>System Settings › Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>. Allow it to find devices on your local network when asked.</p>
 
   <h2>First time on Windows</h2>
-  <p>Unzip it anywhere and run <code>kickfile.exe</code>. If SmartScreen warns about an unknown app, choose <strong>More info › Run anyway</strong>. Allow kickFile through the firewall on <strong>private</strong> networks.</p>
+  <p>Run the installer (or unzip the zip anywhere and run <code>kickfile.exe</code>). If SmartScreen warns about an unknown app, choose <strong>More info › Run anyway</strong>. Allow kickFile through the firewall on <strong>private</strong> networks.</p>
 
   <footer>
     <a href="privacy/">Privacy</a> · <a href="https://github.com/ukpratik/kickfile">Source code</a> · <a href="https://github.com/ukpratik/kickfile/issues">Report a problem</a> · GPL-3.0-or-later
@@ -92,7 +93,7 @@
     var pick = /Android/i.test(ua) ? ['kickFile-android.apk', 'Download for Android']
       : /iPhone|iPad|iPod/i.test(ua) ? null
       : /Mac/i.test(ua) ? ['kickFile-macos.dmg', 'Download for Mac']
-      : /Win/i.test(ua) ? ['kickFile-windows-x64.zip', 'Download for Windows']
+      : /Win/i.test(ua) ? ['kickFile-windows-x64-setup.exe', 'Download for Windows']
       : /Linux|X11/i.test(ua) ? ['kickFile-linux-x64.tar.gz', 'Download for Linux']
       : null;
     var btn = document.querySelector('#primary .btn');

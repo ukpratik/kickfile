@@ -47,12 +47,13 @@ const kInstallChannels = [
     'Mac',
     'macOS 12+ · DMG',
     LucideIcons.laptop,
-    [InstallChannel('DMG', 'From GitHub Releases', url: kReleasesUrl), InstallChannel('Homebrew', 'brew install --cask kickfile')],
+    [InstallChannel('DMG', 'From GitHub Releases', url: kReleasesUrl), InstallChannel('Homebrew', 'brew install --cask ukpratik/tap/kickfile', url: 'https://github.com/ukpratik/homebrew-tap')],
     note: 'Needs macOS 12 or later.',
     tip: ('First time you open it', 'macOS may block it. Go to System Settings › Privacy & Security › Open Anyway.'),
   ),
-  InstallPlatform(DevicePlatform.windows, 'Windows PC', 'Windows 10/11 · zip', LucideIcons.monitor, [
-    InstallChannel('Zip file', 'From GitHub Releases', url: kReleasesUrl),
+  InstallPlatform(DevicePlatform.windows, 'Windows PC', 'Windows 10/11 · Installer', LucideIcons.monitor, [
+    InstallChannel('Installer or zip', 'From GitHub Releases', url: kReleasesUrl),
+    InstallChannel('Scoop', 'scoop install ukpratik/kickfile', url: 'https://github.com/ukpratik/scoop-bucket'),
     InstallChannel('winget', 'winget install kickFile'),
     InstallChannel('Microsoft Store', 'Store app'),
   ], note: 'Needs Windows 10 or 11, 64-bit.'),

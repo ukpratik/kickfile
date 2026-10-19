@@ -30,8 +30,8 @@ Getting a video off your phone and onto your laptop shouldn't need a cable, a cl
 | Platform | Get it | Needs |
 |---|---|---|
 | **Android** | [APK](https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-android.apk) · F-Droid, IzzyOnDroid, Google Play *(coming soon)* | Android 8.0+ |
-| **macOS** | [DMG](https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-macos.dmg) · Homebrew *(coming soon)* | macOS 12+, Apple silicon or Intel |
-| **Windows** | [Zip](https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-windows-x64.zip) · winget, Microsoft Store *(coming soon)* | Windows 10/11, 64-bit |
+| **macOS** | [DMG](https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-macos.dmg) · Homebrew: `brew install --cask ukpratik/tap/kickfile` | macOS 12+, Apple silicon or Intel |
+| **Windows** | [Installer](https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-windows-x64-setup.exe) · [Zip](https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-windows-x64.zip) · Scoop: `scoop bucket add ukpratik https://github.com/ukpratik/scoop-bucket` then `scoop install ukpratik/kickfile` · winget, Microsoft Store *(coming soon)* | Windows 10/11, 64-bit |
 | **Linux** | [tar.gz](https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-linux-x64.tar.gz) · Flathub *(coming soon)* | x64, GTK 3 |
 | **iPhone & iPad** | *Coming later* | |
 
@@ -41,7 +41,7 @@ Or open **[ukpratik.github.io/kickfile](https://ukpratik.github.io/kickfile)** o
 <summary><b>First launch on macOS and Windows</b></summary>
 
 - **macOS:** kickFile isn't notarised by Apple yet. Open it once, then go to **System Settings › Privacy & Security** and click **Open Anyway**. When asked, allow it to find devices on your local network.
-- **Windows:** unzip anywhere and run `kickfile.exe`. If SmartScreen warns about an unknown app, choose **More info › Run anyway**. Allow it through the firewall on **private** networks.
+- **Windows:** run the installer (or unzip anywhere and run `kickfile.exe`). If SmartScreen warns about an unknown app, choose **More info › Run anyway**. Allow it through the firewall on **private** networks.
 - **Linux:** extract and run `kickFile/kickfile`. A system tray needs an AppIndicator extension on GNOME.
 - **Android APK:** allow your browser or file manager to install unknown apps when asked. Check the APK's signing certificate against [docs/RELEASING.md](docs/RELEASING.md#certificate-fingerprints) if you like.
 </details>
