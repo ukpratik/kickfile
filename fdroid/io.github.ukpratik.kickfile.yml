@@ -27,6 +27,8 @@ Builds:
       - app/macos
       - app/windows
     prebuild:
+      - sdkmanager "platforms;android-37.0"
+      - ln -s $$SDK$$/platforms/android-37.0 $$SDK$$/platforms/android-37
       - flutterVersion=$(sed -n -E 's/^ *FLUTTER_VERSION:[ ]*"?([0-9.]+)"?.*/\1/p'
         ../.github/workflows/ci.yml)
       - '[[ $flutterVersion ]]'
@@ -53,6 +55,8 @@ Builds:
       - app/macos
       - app/windows
     prebuild:
+      - sdkmanager "platforms;android-37.0"
+      - ln -s $$SDK$$/platforms/android-37.0 $$SDK$$/platforms/android-37
       - flutterVersion=$(sed -n -E 's/^ *FLUTTER_VERSION:[ ]*"?([0-9.]+)"?.*/\1/p'
         ../.github/workflows/ci.yml)
       - '[[ $flutterVersion ]]'
@@ -79,6 +83,8 @@ Builds:
       - app/macos
       - app/windows
     prebuild:
+      - sdkmanager "platforms;android-37.0"
+      - ln -s $$SDK$$/platforms/android-37.0 $$SDK$$/platforms/android-37
       - flutterVersion=$(sed -n -E 's/^ *FLUTTER_VERSION:[ ]*"?([0-9.]+)"?.*/\1/p'
         ../.github/workflows/ci.yml)
       - '[[ $flutterVersion ]]'

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Validates the winget manifests in packaging/winget and installs kickFile from them on a clean runner.
+# Validates the winget manifests in packaging/winget. (winget install hangs on GitHub's runners; the
+# installer itself is install/uninstall-tested in release.yml, and winget-pkgs' pipeline installs it too.)
 name: winget manifests
 
 on:
@@ -31,10 +32,3 @@ jobs:
       - name: Validate
         timeout-minutes: 5
         run: winget validate --manifest $env:MANIFEST --disable-interactivity
-      - name: Install, check, uninstall
-        timeout-minutes: 10
-        run: |
-          winget install --manifest $env:MANIFEST --scope user --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
-          if (!(Test-Path "$env:LOCALAPPDATA\Programs\kickFile\kickfile.exe")) { throw "kickfile.exe not installed" }
-          Start-Process "$env:LOCALAPPDATA\Programs\kickFile\unins000.exe" -ArgumentList '/VERYSILENT' -Wait
-          Write-Host "winget validate + install + uninstall OK"
