@@ -12,10 +12,16 @@ on:
       tag:
         description: Existing tag to build (vX.Y.Z)
         required: true
+      only:
+        description: "all = every desktop asset; windows-installer = add just the installer to an existing release"
+        type: choice
+        options: [all, windows-installer]
+        default: all
 
 env:
   FLUTTER_VERSION: 3.47.5
   TAG: ${{ inputs.tag || github.ref_name }}
+  ONLY: ${{ inputs.only || 'all' }}
 
 defaults:
   run:
@@ -23,6 +29,7 @@ defaults:
 
 jobs:
   macos:
+    if: (inputs.only || 'all') == 'all'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,24 +61,47 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.TAG }}
+      # Packaging scripts come from the workflow's branch, so older tags can get new packages.
+      - uses: actions/checkout@v4
+        with:
+          path: tools-src
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
       - run: flutter build windows --release
-      - name: Package zip
+      - name: Package zip and installer
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force out/kickFile | Out-Null
+          New-Item -ItemType Directory -Force out/kickFile, dist | Out-Null
           Copy-Item -Recurse build/windows/x64/runner/Release/* out/kickFile/
-          Compress-Archive -Path out/kickFile -DestinationPath kickFile-windows-x64.zip
+          # App-local Visual C++ runtime, so kickFile starts on a fresh Windows.
+          foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') { Copy-Item "$env:WINDIR\System32\$dll" out/kickFile/ }
+          if ($env:ONLY -eq 'all') { Compress-Archive -Path out/kickFile -DestinationPath dist/kickFile-windows-x64.zip }
+          $version = (Select-String -Path pubspec.yaml -Pattern '^version:\s*([0-9.]+)\+').Matches[0].Groups[1].Value
+          choco install innosetup --no-progress -y | Out-Null
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Qp "/DAppVersion=$version" "/DSourceDir=$PWD\out\kickFile" "/DOutputDir=$PWD\dist" "$env:GITHUB_WORKSPACE\tools-src\app\windows\installer\kickfile.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem dist
+      - name: Installer smoke test
+        shell: pwsh
+        run: |
+          Start-Process dist/kickFile-windows-x64-setup.exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CURRENTUSER' -Wait
+          $exe = "$env:LOCALAPPDATA\Programs\kickFile\kickfile.exe"
+          if (!(Test-Path $exe)) { throw "not installed: $exe" }
+          if (!(Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\kickFile.lnk")) { throw "no Start menu shortcut" }
+          Start-Process "$env:LOCALAPPDATA\Programs\kickFile\unins000.exe" -ArgumentList '/VERYSILENT' -Wait
+          Start-Sleep 3
+          if (Test-Path $exe) { throw "uninstall left the app behind" }
+          Write-Host "install + uninstall OK"
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: app/kickFile-windows-x64.zip
+          path: app/dist/*
 
   linux:
+    if: (inputs.only || 'all') == 'all'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -96,6 +126,8 @@ jobs:
 
   draft:
     needs: [macos, windows, linux]
+    # In installer-only mode macOS and Linux are skipped; everything that ran must have passed.
+    if: always() && needs.windows.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -112,6 +144,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          cd dist && sha256sum * > SHA256SUMS-desktop.txt && cd ..
+          cd dist && if [ "$ONLY" = all ]; then sha256sum * > SHA256SUMS-desktop.txt; else sha256sum * > SHA256SUMS-windows-installer.txt; fi && cd ..
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --verify-tag --title "kickFile ${TAG#v}" --notes "See CHANGELOG.md."
           gh release upload "$TAG" dist/* --clobber
