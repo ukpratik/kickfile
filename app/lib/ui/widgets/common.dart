@@ -344,21 +344,59 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-/// The kickFile mark (accent square, document, outbound arrow).
+/// The kickFile "Beam" mark: a file sending a local signal. Brand colours in every theme (tool/icons/build_icons.py).
 class KfMark extends StatelessWidget {
   const KfMark({super.key, this.size = 28});
   final double size;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.primary,
-      borderRadius: BorderRadius.circular(size * 0.26),
-    ),
-    child: Icon(LucideIcons.fileUp, size: size * 0.62, color: Theme.of(context).colorScheme.onPrimary),
+  Widget build(BuildContext context) => Semantics(
+    label: 'kickFile',
+    child: CustomPaint(size: Size.square(size), painter: const _MarkPainter()),
   );
+}
+
+class _MarkPainter extends CustomPainter {
+  const _MarkPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width / 1024;
+    canvas.scale(s);
+    const tile = Rect.fromLTWH(0, 0, 1024, 1024);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(tile, const Radius.circular(230)),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment(-0.3, 1),
+          colors: [Color(0xFF7C5CF2), Color(0xFF5130C2)],
+        ).createShader(tile),
+    );
+    final doc = Path()
+      ..moveTo(248, 440)
+      ..lineTo(432, 440)
+      ..lineTo(512, 520)
+      ..lineTo(512, 800)
+      ..quadraticBezierTo(512, 840, 472, 840)
+      ..lineTo(248, 840)
+      ..quadraticBezierTo(208, 840, 208, 800)
+      ..lineTo(208, 480)
+      ..quadraticBezierTo(208, 440, 248, 440)
+      ..close();
+    canvas.drawPath(doc, Paint()..color = Colors.white);
+    final arc = Paint()
+      ..color = const Color(0xFFFF7A59)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 60
+      ..strokeCap = StrokeCap.round;
+    for (final r in [140.0, 270.0]) {
+      canvas.drawArc(Rect.fromCircle(center: const Offset(540, 460), radius: r), -math.pi / 2, math.pi / 2, false, arc);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MarkPainter old) => false;
 }
 
 Future<void> copyText(BuildContext context, String text, {String done = 'Copied'}) async {
