@@ -277,7 +277,7 @@ class IncomingCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _Title(icon: LucideIcons.arrowDownToLine, title: 'Receiving $what from ${s.senderName}'),
-            Text('${countFiles(s.fileCount)} · saving to ${context.services.saveDir}', style: tt.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text('${countFiles(s.fileCount)} · saving to ${context.services.displaySaveDir}', style: tt.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
             Padding(
               padding: const EdgeInsets.only(top: KfSpace.s3),
               child: ClipRRect(borderRadius: BorderRadius.circular(2), child: LinearProgressIndicator(value: pct, minHeight: 4)),

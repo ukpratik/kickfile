@@ -15,3 +15,6 @@ key.properties
 
 # local test builds (not releases)
 test-builds/
+
+# rendered videos (large)
+media/

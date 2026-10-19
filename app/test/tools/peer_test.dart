@@ -25,7 +25,7 @@ void main() {
     final node = await KickNode.open(
       dataDir: Directory(p.join(root.path, 'data')),
       files: IoFileAccess(p.join(root.path, 'received')),
-      defaultName: 'Test Mac peer',
+      defaultName: Platform.environment['KF_PEER_NAME'] ?? 'Test Mac peer',
       platform: DevicePlatform.macos,
     );
     await node.settings.update((s) => s.copyWith(onboarded: true));
@@ -46,6 +46,9 @@ void main() {
     final secret = node.receiver.newPairingSecret();
     stdout.writeln('PEER ready fp=${node.fingerprint.substring(0, 12)} port=${node.port} shortcode-for-emulator=2-$secret');
     File(p.join(root.path, 'secret.txt')).writeAsStringSync(secret);
+    File(p.join(root.path, 'pair-link.txt')).writeAsStringSync(
+      'kickfile://c?v=1&a=10.0.2.2&p=${node.port}&fp=${node.fingerprint}&s=$secret&n=${Uri.encodeQueryComponent(node.info.name)}',
+    );
 
     final sendHost = Platform.environment['KF_SEND_HOST'];
     final sendFile = Platform.environment['KF_SEND_FILE'];

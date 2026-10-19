@@ -17,17 +17,19 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  late final TextEditingController _name;
+  // Created once: didChangeDependencies runs again on theme, text-size or window changes.
+  TextEditingController? _controller;
+  TextEditingController get _name => _controller!;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _name = TextEditingController(text: context.services.node.settings.value.deviceName);
+    _controller ??= TextEditingController(text: context.services.node.settings.value.deviceName);
   }
 
   @override
   void dispose() {
-    _name.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 

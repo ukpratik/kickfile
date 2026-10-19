@@ -72,7 +72,7 @@ class SettingsScreen extends StatelessWidget {
                   if (isDesktop)
                     ListTile(
                       title: const Text('Save files to'),
-                      subtitle: Text(s.saveDir, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      subtitle: Text(s.displaySaveDir, maxLines: 2, overflow: TextOverflow.ellipsis),
                       trailing: TextButton(onPressed: () => _chooseFolder(context), child: const Text('Change')),
                     ),
                   if (isDesktop && v.saveDir != null)

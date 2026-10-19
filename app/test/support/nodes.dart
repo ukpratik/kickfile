@@ -31,6 +31,7 @@ class TestDevice {
     Duration staleAfter = const Duration(seconds: 30),
     Duration autoRetryFor = const Duration(seconds: 10),
     Duration stallAfter = const Duration(seconds: 15),
+    DevicePlatform platform = DevicePlatform.linux,
     FileAccess Function(String saveDir)? files,
   }) async {
     final root = await Directory.systemTemp.createTemp('kf_${name}_');
@@ -39,7 +40,7 @@ class TestDevice {
       dataDir: Directory(p.join(root.path, 'data')),
       files: files?.call(saveDir) ?? IoFileAccess(saveDir),
       defaultName: name,
-      platform: DevicePlatform.linux,
+      platform: platform,
       offerTimeout: offerTimeout,
       staleAfter: staleAfter,
       autoRetryFor: autoRetryFor,

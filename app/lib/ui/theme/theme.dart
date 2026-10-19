@@ -18,7 +18,10 @@ List<String>? get _fontFallback {
   return null;
 }
 
-ThemeData kfTheme(Brightness b) {
+/// [font] overrides the platform font (used when rendering screens for docs and videos).
+ThemeData kfTheme(Brightness b, {String? font}) {
+  final family = font ?? _fontFamily;
+  final fallback = font == null ? _fontFallback : null;
   final cs = b == Brightness.light ? kfLight : kfDark;
   final kf = b == Brightness.light ? KfColors.light : KfColors.dark;
   final desktop = isDesktop;
@@ -30,8 +33,8 @@ ThemeData kfTheme(Brightness b) {
     fontWeight: w,
     color: color ?? cs.onSurface,
     letterSpacing: spacing ?? 0,
-    fontFamily: _fontFamily,
-    fontFamilyFallback: _fontFallback,
+    fontFamily: family,
+    fontFamilyFallback: fallback,
   );
 
   final text = TextTheme(
@@ -53,8 +56,8 @@ ThemeData kfTheme(Brightness b) {
     brightness: b,
     scaffoldBackgroundColor: cs.surface,
     textTheme: text,
-    fontFamily: _fontFamily,
-    fontFamilyFallback: _fontFallback,
+    fontFamily: family,
+    fontFamilyFallback: fallback,
     extensions: [kf],
     visualDensity: desktop ? VisualDensity.compact : VisualDensity.standard,
     materialTapTargetSize: desktop ? MaterialTapTargetSize.shrinkWrap : MaterialTapTargetSize.padded,

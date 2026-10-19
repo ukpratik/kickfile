@@ -30,7 +30,11 @@ import 'source_sheet.dart';
 
 /// One screen on mobile, one compact window on desktop (D-02 / M-02).
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.previewDropTarget});
+
+  /// Renders the "drop onto this device" state for docs and videos (no real drag).
+  @visibleForTesting
+  final String? previewDropTarget;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -45,6 +49,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.previewDropTarget != null) {
+      _dragging = true;
+      _dropFp = widget.previewDropTarget;
+    }
     // Countdowns and "searching" need a 1 s heartbeat.
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;

@@ -91,6 +91,15 @@ class AppServices {
 
   String get saveDir => files is IoFileAccess ? (files as IoFileAccess).saveDir : defaultSaveDir;
 
+  /// Shown to people: the home folder as ~ (`~/Downloads/kickFile`). Overridable for renders.
+  String? displaySaveDirOverride;
+  String get displaySaveDir {
+    if (displaySaveDirOverride != null) return displaySaveDirOverride!;
+    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    final dir = saveDir;
+    return home != null && dir.startsWith(home) ? '~${dir.substring(home.length)}' : dir;
+  }
+
   Future<void> setSaveDir(String? dir) async {
     await node.settings.update((s) => dir == null ? s.copyWith(clearSaveDir: true) : s.copyWith(saveDir: dir));
     if (files is IoFileAccess) (files as IoFileAccess).saveDir = dir ?? defaultSaveDir;
