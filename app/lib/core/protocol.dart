@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:convert';
 
 import 'errors.dart';
@@ -17,6 +18,7 @@ const kMaxFileSize = 1 << 50; // 1 PiB, far above anything real but safe in a do
 const kOfferTimeout = Duration(seconds: 60);
 const kRateLimit = Duration(seconds: 5);
 const kPairingSecretTtl = Duration(minutes: 10);
+const kPairingSecretMaxMisses = 10;
 const kPartialTtl = Duration(hours: 24);
 
 enum DevicePlatform {

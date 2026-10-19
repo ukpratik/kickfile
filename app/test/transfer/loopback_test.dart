@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 @Timeout(Duration(seconds: 90))
 library;
 
@@ -309,6 +310,16 @@ void main() {
         throwsA(isA<KfError>().having((e) => e.code, 'code', KfErrorCode.badSecret)),
       );
       expect(b.node.peers.isTrusted(a.node.fingerprint), isFalse);
+    });
+
+    test('the secret stops working after too many wrong tries', () async {
+      final secret = b.node.receiver.newPairingSecret();
+      final wrong = secret == '100000' ? '100001' : '100000';
+      for (var i = 0; i < kPairingSecretMaxMisses; i++) {
+        expect(b.node.receiver.checkPairingSecret(wrong), isFalse);
+      }
+      expect(b.node.receiver.checkPairingSecret(secret), isFalse);
+      expect(b.node.receiver.checkPairingSecret(b.node.receiver.newPairingSecret()), isTrue);
     });
 
     test('Hidden devices answer info only with a valid pairing secret', () async {

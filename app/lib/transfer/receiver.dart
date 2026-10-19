@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -169,6 +170,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
   final _declines = <String, List<DateTime>>{};
   String? _secret;
   DateTime? _secretAt;
+  int _secretMisses = 0;
   Timer? _ticker;
   Timer? _saveTimer;
   DateTime _lastNotify = DateTime.fromMillisecondsSinceEpoch(0);
@@ -205,6 +207,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
   String newPairingSecret() {
     _secret = (Random.secure().nextInt(900000) + 100000).toString();
     _secretAt = DateTime.now();
+    _secretMisses = 0;
     return _secret!;
   }
 
@@ -213,10 +216,10 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
   @override
   bool checkPairingSecret(String secret) {
     final at = _secretAt;
-    return _secret != null &&
-        secret == _secret &&
-        at != null &&
-        DateTime.now().difference(at) < kPairingSecretTtl;
+    final ok = _secret != null && secret == _secret && at != null && DateTime.now().difference(at) < kPairingSecretTtl;
+    // A 6-digit secret can't survive guessing: after too many wrong tries it stops working (reopen Show QR for a new one).
+    if (!ok && _secret != null && ++_secretMisses >= kPairingSecretMaxMisses) _secret = null;
+    return ok;
   }
 
   @override
