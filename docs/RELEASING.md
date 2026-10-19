@@ -72,5 +72,5 @@ Check an APK with `apksigner verify --print-certs kickFile-android.apk`.
    ```
    Asset names have no version, so `releases/latest/download/<name>` links on the site and in the app keep working.
 5. **Archive** the files in `~/Desktop/PersonalProjects/builds/kickfile/X.Y.Z/` with `builds/archive-build.sh` (maintainer machine only; never committed).
-6. **Publish** the draft release. Then, if `site/` changed, run **Actions › Pages**.
+6. **Publish** the draft release. The site redeploys by itself when `site/` changes on `main`.
 7. **F-Droid** (first time): copy `fdroid/io.github.ukpratik.kickfile.yml` into a merge request on [fdroiddata](https://gitlab.com/fdroid/fdroiddata), with `commit:` set to the tag's commit hash. Later releases are picked up automatically from the tags (`UpdateCheckMode: Tags`).

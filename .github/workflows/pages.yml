@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Publishes site/ (download page + privacy policy) to https://ukpratik.github.io/kickfile/.
 # Needs a public repo (on a free plan) and Settings → Pages → Source: GitHub Actions.
-# Run manually (Actions → Pages → Run workflow). To publish on every change to site/, add
-#   push: { branches: [main], paths: ["site/**", ".github/workflows/pages.yml"] }
+# Runs on every change to site/, or manually (Actions → Pages → Run workflow).
 name: Pages
 
 on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
