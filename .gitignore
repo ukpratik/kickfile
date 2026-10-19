@@ -17,4 +17,4 @@ key.properties
 test-builds/
 
 # rendered videos (large)
-media/
+/media/
