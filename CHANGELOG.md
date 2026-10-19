@@ -2,6 +2,12 @@
 
 All notable changes to kickFile. Versions follow [SemVer](https://semver.org); the Android `versionCode` is `MAJOR×10000 + MINOR×100 + PATCH`.
 
+## 1.0.1 (2026-10-19)
+
+- New app icon ("Beam": a file sending a local signal) on every platform, including Android themed icons, the status bar, the tray and the Linux window.
+- The pairing code stops working after 10 wrong tries.
+- Settings › About links to the source code.
+
 ## 1.0.0 (2026-10-19)
 
 First public release, for Android, macOS, Windows and Linux.

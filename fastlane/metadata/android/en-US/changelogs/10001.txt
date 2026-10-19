@@ -1,0 +1,3 @@
+New app icon on every platform, including Android themed icons and the status bar.
+• The pairing code stops working after 10 wrong tries.
+• About links to the source code.

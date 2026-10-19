@@ -198,8 +198,8 @@ class SettingsScreen extends StatelessWidget {
                   ListTile(
                     leading: const Icon(LucideIcons.info),
                     title: const Text('About kickFile'),
-                    subtitle: Text('Version 1.0.0 · protocol v$kProtocolVersion'),
-                    onTap: () => showLicensePage(context: context, applicationName: 'kickFile', applicationVersion: '1.0.0'),
+                    subtitle: Text('Version $kAppVersion · protocol v$kProtocolVersion'),
+                    onTap: () => showLicensePage(context: context, applicationName: 'kickFile', applicationVersion: kAppVersion),
                   ),
                   ListTile(
                     leading: const Icon(LucideIcons.codeXml),

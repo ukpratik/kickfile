@@ -41,8 +41,31 @@ Builds:
       - $$flutter$$/bin/flutter build apk --release
     ndk: r28c
 
+  - versionName: 1.0.1
+    versionCode: 10001
+    commit: v1.0.1
+    subdir: app
+    output: build/app/outputs/flutter-apk/app-release.apk
+    srclibs:
+      - flutter@3.47.5
+    rm:
+      - app/ios
+      - app/macos
+      - app/windows
+      - app/linux
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter config --no-analytics
+      - $$flutter$$/bin/flutter pub get
+    scandelete:
+      - app/.pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter build apk --release
+    ndk: r28c
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9.]+$
 UpdateCheckData: app/pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
-CurrentVersion: 1.0.0
-CurrentVersionCode: 10000
+CurrentVersion: 1.0.1
+CurrentVersionCode: 10001
