@@ -1,0 +1,6 @@
+First release.
+• Send files, photos, videos, folders and text between Android, Mac, Windows and Linux over Wi-Fi or a hotspot.
+• Encrypted, with a 6-digit code to check the first time.
+• Devices find each other by themselves, or connect with a QR code.
+• Transfers resume after a dropped connection.
+• No account, no internet, no ads.

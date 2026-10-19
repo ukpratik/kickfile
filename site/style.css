@@ -1,0 +1,32 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* kickFile site: the app's tokens (purple accent, violet-tinted neutrals), light and dark. */
+:root { --accent: #6741D9; --on-accent: #fff; --soft: #EEE9FC; --ink: #1C1A22; --muted: #5E5A68; --bg: #FBFAFD; --card: #fff; --line: #E5E1EC; }
+@media (prefers-color-scheme: dark) {
+  :root { --accent: #B39DFF; --on-accent: #1E1240; --soft: #2A2342; --ink: #ECE9F2; --muted: #A9A4B4; --bg: #131218; --card: #1C1A23; --line: #2E2B38; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+a { color: var(--accent); }
+h1 { font-size: 2.1rem; line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; margin: 36px 0 10px; }
+.muted { color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; margin: 24px 0; }
+.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; font-weight: 700; font-size: 1.2rem; text-decoration: none; color: var(--ink); }
+.brand img { width: 40px; height: 40px; border-radius: 10px; }
+.btn { display: inline-block; background: var(--accent); color: var(--on-accent); text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 12px; }
+.btn.tonal { background: var(--soft); color: var(--accent); }
+.primary { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.primary .note { flex-basis: 100%; font-size: .92rem; color: var(--muted); margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.grid .card { margin: 0; padding: 16px 18px; }
+.grid h3 { margin: 0 0 2px; font-size: 1rem; }
+.grid p { margin: 0 0 10px; font-size: .9rem; color: var(--muted); }
+.grid ul { list-style: none; padding: 0; margin: 0; font-size: .95rem; }
+.grid li { margin: 4px 0; }
+.soon { font-size: .78rem; color: var(--muted); background: var(--soft); border-radius: 6px; padding: 1px 7px; margin-left: 4px; white-space: nowrap; }
+.shot { width: 100%; height: auto; border-radius: 12px; }
+ol, ul { padding-left: 1.2em; }
+li { margin: 6px 0; }
+code { font-size: .9em; background: var(--soft); padding: 1px 5px; border-radius: 5px; overflow-wrap: anywhere; }
+footer { margin-top: 48px; font-size: 0.9rem; color: var(--muted); }

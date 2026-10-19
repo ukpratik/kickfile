@@ -1,0 +1,31 @@
+<p><b>kickFile moves files between your phone and your laptop over your own Wi-Fi or your phone's hotspot.</b> Full quality, encrypted, with no cable, no account, no internet and no ads.</p>
+
+<p>Open kickFile on both devices and they find each other by themselves. Tap a device, pick what to send, done. On a computer, drag files onto your phone.</p>
+
+<p><b>Works with</b></p>
+<ul>
+<li>Android phones and tablets (Android 8.0+)</li>
+<li>Mac (macOS 12+), Windows 10/11 and Linux PCs, with the free kickFile desktop app</li>
+</ul>
+
+<p><b>Features</b></p>
+<ul>
+<li>Send files, photos, videos, whole folders and text, in both directions</li>
+<li>Any size and type, at full quality: nothing is compressed</li>
+<li>Share to kickFile from any app</li>
+<li>Photos and videos go to your gallery, other files to Downloads/kickFile</li>
+<li>Resumes by itself if the connection drops</li>
+<li>Trust a device once and it can send to you without asking</li>
+<li>Works on a hotspot with no internet, and never uses mobile data</li>
+<li>Connect with a QR code or a short code when automatic discovery is blocked</li>
+<li>Light and dark theme</li>
+</ul>
+
+<p><b>Private by design</b></p>
+<ul>
+<li>Files go straight from one device to the other on your local network, encrypted with TLS</li>
+<li>The first time, both screens show the same 6-digit code so you know you're connected to the right device</li>
+<li>No servers, no account, no analytics, no tracking</li>
+</ul>
+
+<p>The camera is used only to scan kickFile QR codes. kickFile is free and open source (GPL-3.0-or-later).</p>

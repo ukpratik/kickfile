@@ -1,0 +1,48 @@
+# Draft F-Droid metadata (fdroiddata/metadata/io.github.ukpratik.kickfile.yml).
+# Submit as a merge request to https://gitlab.com/fdroid/fdroiddata after the v1.0.0 tag is public;
+# set `commit` to the tag's full commit hash. See docs/RELEASING.md.
+Categories:
+  - Connectivity
+  - System
+License: GPL-3.0-or-later
+AuthorName: Pratik Ukey
+AuthorEmail: pratikuk99@gmail.com
+WebSite: https://ukpratik.github.io/kickfile/
+SourceCode: https://github.com/ukpratik/kickfile
+IssueTracker: https://github.com/ukpratik/kickfile/issues
+Changelog: https://github.com/ukpratik/kickfile/blob/main/CHANGELOG.md
+
+AutoName: kickFile
+
+RepoType: git
+Repo: https://github.com/ukpratik/kickfile.git
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 10000
+    commit: v1.0.0
+    subdir: app
+    output: build/app/outputs/flutter-apk/app-release.apk
+    srclibs:
+      - flutter@3.47.5
+    rm:
+      - app/ios
+      - app/macos
+      - app/windows
+      - app/linux
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter config --no-analytics
+      - $$flutter$$/bin/flutter pub get
+    scandelete:
+      - app/.pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter build apk --release
+    ndk: r28c
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9.]+$
+UpdateCheckData: app/pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
+CurrentVersion: 1.0.0
+CurrentVersionCode: 10000

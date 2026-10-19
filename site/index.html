@@ -1,0 +1,107 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>kickFile · Move files between your phone and laptop</title>
+  <meta name="description" content="Free, open-source app to send files between Android, Mac, Windows and Linux over your Wi-Fi or a hotspot. Encrypted, no account, no internet.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="icon.svg">
+</head>
+<body>
+<main>
+  <a class="brand" href="./"><img src="icon.svg" alt=""> kickFile</a>
+  <h1>Move files between your phone and laptop</h1>
+  <p class="muted">Over your Wi-Fi or your phone's hotspot. Full quality, encrypted end to end. No account, no cable, no internet, no ads. Free and open source.</p>
+
+  <div class="card">
+    <div class="primary" id="primary">
+      <a class="btn" href="https://github.com/ukpratik/kickfile/releases/latest">Download kickFile</a>
+      <a class="btn tonal" href="#all">All platforms</a>
+      <p class="note">Install it on both devices you want to share files between.</p>
+    </div>
+  </div>
+
+  <h2 id="all">Get it for your device</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Android phone</h3>
+      <p>Android 8.0 or later</p>
+      <ul>
+        <li><a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-android.apk">APK file</a> (GitHub)</li>
+        <li>F-Droid <span class="soon">Coming soon</span></li>
+        <li>IzzyOnDroid <span class="soon">Coming soon</span></li>
+        <li>Google Play <span class="soon">Coming soon</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Mac</h3>
+      <p>macOS 12 or later, Apple silicon or Intel</p>
+      <ul>
+        <li><a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-macos.dmg">DMG</a> (GitHub)</li>
+        <li>Homebrew <span class="soon">Coming soon</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Windows PC</h3>
+      <p>Windows 10 or 11, 64-bit</p>
+      <ul>
+        <li><a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-windows-x64.zip">Zip file</a> (GitHub)</li>
+        <li>winget <span class="soon">Coming soon</span></li>
+        <li>Microsoft Store <span class="soon">Coming soon</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Linux PC</h3>
+      <p>64-bit (x64)</p>
+      <ul>
+        <li><a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-linux-x64.tar.gz">tar.gz bundle</a> (GitHub)</li>
+        <li>Flathub <span class="soon">Coming soon</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>iPhone &amp; iPad</h3>
+      <p>Not available yet</p>
+      <ul><li><span class="soon">Coming later</span></li></ul>
+    </div>
+  </div>
+
+  <h2>How it works</h2>
+  <ol>
+    <li>Open kickFile on both devices, on the same Wi-Fi or your phone's hotspot. They find each other by themselves (or scan a QR code).</li>
+    <li>Pick files and tap the other device. On a computer, drag files onto it.</li>
+    <li>The first time, check that both screens show the same 6-digit code, then trust the device. Files go straight across your local network, encrypted.</li>
+  </ol>
+  <p><a href="https://github.com/ukpratik/kickfile/releases/latest/download/kickFile-how-to.mp4">Watch the 3-minute how-to video</a></p>
+
+  <h2>First time on a Mac</h2>
+  <p>kickFile isn't notarised by Apple yet, so macOS blocks the first launch. Open it once, then go to <strong>System Settings › Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>. Allow it to find devices on your local network when asked.</p>
+
+  <h2>First time on Windows</h2>
+  <p>Unzip it anywhere and run <code>kickfile.exe</code>. If SmartScreen warns about an unknown app, choose <strong>More info › Run anyway</strong>. Allow kickFile through the firewall on <strong>private</strong> networks.</p>
+
+  <footer>
+    <a href="privacy/">Privacy</a> · <a href="https://github.com/ukpratik/kickfile">Source code</a> · <a href="https://github.com/ukpratik/kickfile/issues">Report a problem</a> · GPL-3.0-or-later
+  </footer>
+</main>
+<script>
+  // Point the main button at this visitor's platform; the full list stays below.
+  (function () {
+    var ua = navigator.userAgent, base = 'https://github.com/ukpratik/kickfile/releases/latest/download/';
+    var pick = /Android/i.test(ua) ? ['kickFile-android.apk', 'Download for Android']
+      : /iPhone|iPad|iPod/i.test(ua) ? null
+      : /Mac/i.test(ua) ? ['kickFile-macos.dmg', 'Download for Mac']
+      : /Win/i.test(ua) ? ['kickFile-windows-x64.zip', 'Download for Windows']
+      : /Linux|X11/i.test(ua) ? ['kickFile-linux-x64.tar.gz', 'Download for Linux']
+      : null;
+    var btn = document.querySelector('#primary .btn');
+    if (pick) { btn.href = base + pick[0]; btn.textContent = pick[1]; }
+    else if (/iPhone|iPad|iPod/i.test(ua)) {
+      btn.removeAttribute('href'); btn.textContent = 'iPhone app coming later';
+      document.querySelector('#primary .note').textContent = 'Open this page on your Android phone or computer to download kickFile.';
+    }
+  })();
+</script>
+</body>
+</html>
