@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Builds the Flathub package from packaging/flatpak and runs Flathub's linter on it.
+name: Flatpak
+
+on:
+  push:
+    paths: ["packaging/flatpak/**", ".github/workflows/flatpak.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shared modules
+        run: git clone --depth 1 https://github.com/flathub/shared-modules.git packaging/flatpak/shared-modules
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: kickfile.flatpak
+          manifest-path: packaging/flatpak/io.github.ukpratik.kickfile.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+      - name: Flathub linter
+        run: |
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.flatpak.Builder
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flatpak/io.github.ukpratik.kickfile.yml
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo

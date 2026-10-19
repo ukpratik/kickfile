@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=kickFile
+GenericName=File Transfer
+Comment=Move files between your phone and computer over Wi-Fi
+Exec=kickfile
+Icon=io.github.ukpratik.kickfile
+Terminal=false
+Categories=Network;FileTransfer;
+Keywords=share;send;transfer;phone;android;wifi;lan;
+StartupWMClass=kickfile

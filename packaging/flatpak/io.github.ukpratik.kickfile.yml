@@ -1,0 +1,49 @@
+# Flatpak manifest (Flathub). Repackages the release's Linux bundle and adds the files a desktop needs.
+app-id: io.github.ukpratik.kickfile
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: kickfile
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  # Received files are saved in Downloads/kickFile.
+  - --filesystem=xdg-download
+  # Finding devices with DNS-SD.
+  - --system-talk-name=org.freedesktop.Avahi
+  # Tray icon and transfer notifications.
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.freedesktop.Notifications
+modules:
+  - shared-modules/libayatana-appindicator/libayatana-appindicator-gtk3.json
+
+  - name: kickfile
+    buildsystem: simple
+    build-commands:
+      - cp -r kickFile /app/kickfile
+      - install -d /app/bin
+      - ln -s /app/kickfile/kickfile /app/bin/kickfile
+      - install -Dm644 io.github.ukpratik.kickfile.desktop -t /app/share/applications
+      - install -Dm644 io.github.ukpratik.kickfile.metainfo.xml -t /app/share/metainfo
+      - install -Dm644 io.github.ukpratik.kickfile.svg -t /app/share/icons/hicolor/scalable/apps
+    sources:
+      - type: archive
+        url: https://github.com/ukpratik/kickfile/releases/download/v1.0.1/kickFile-linux-x64.tar.gz
+        sha256: 741d7570fa6771f1fe09fbb2a9560b62c63333c6ad118966214cd7857a9b3341
+        dest: kickFile
+        only-arches:
+          - x86_64
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/ukpratik/kickfile/releases/latest
+          version-query: .tag_name | sub("^v"; "")
+          url-query: .assets[] | select(.name=="kickFile-linux-x64.tar.gz") | .browser_download_url
+      - type: file
+        path: io.github.ukpratik.kickfile.desktop
+      - type: file
+        path: io.github.ukpratik.kickfile.metainfo.xml
+      - type: file
+        path: io.github.ukpratik.kickfile.svg

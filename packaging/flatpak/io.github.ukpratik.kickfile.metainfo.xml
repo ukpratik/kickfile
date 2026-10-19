@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<component type="desktop-application">
+  <id>io.github.ukpratik.kickfile</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>kickFile</name>
+  <summary>Move files between your phone and computer over Wi-Fi</summary>
+  <developer id="io.github.ukpratik">
+    <name>Pratik Ukey</name>
+  </developer>
+  <description>
+    <p>kickFile sends files, photos, videos, folders and text between your Android phone and your computer over your own Wi-Fi or your phone's hotspot. Full quality, encrypted, with no cable, no account and no internet.</p>
+    <p>Open kickFile on both devices and they find each other. Drag files onto your phone in the kickFile window, or send from the phone to the computer.</p>
+    <ul>
+      <li>Works with Android phones and with kickFile on Linux, Windows and Mac</li>
+      <li>Any size and type, in both directions, nothing compressed</li>
+      <li>Encrypted, with a 6-digit code to check the first time two devices meet</li>
+      <li>Every file is checked, and transfers resume after a dropped connection</li>
+      <li>Connect with a QR code when the network blocks automatic discovery</li>
+      <li>No servers, no account, no ads, no tracking</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.ukpratik.kickfile.desktop</launchable>
+  <url type="homepage">https://ukpratik.github.io/kickfile/</url>
+  <url type="bugtracker">https://github.com/ukpratik/kickfile/issues</url>
+  <url type="vcs-browser">https://github.com/ukpratik/kickfile</url>
+  <url type="contribute">https://github.com/ukpratik/kickfile/blob/main/CONTRIBUTING.md</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Drag files onto your phone to send them</caption>
+      <image>https://raw.githubusercontent.com/ukpratik/kickfile/main/docs/media/app/send.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Check the 6-digit code once, then trust the device</caption>
+      <image>https://raw.githubusercontent.com/ukpratik/kickfile/main/docs/media/app/trust.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Speed and time left while sending</caption>
+      <image>https://raw.githubusercontent.com/ukpratik/kickfile/main/docs/media/app/sending.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Get kickFile on your other devices</caption>
+      <image>https://raw.githubusercontent.com/ukpratik/kickfile/main/docs/media/app/get-kickfile.png</image>
+    </screenshot>
+  </screenshots>
+  <branding>
+    <color type="primary" scheme_preference="light">#E6DDFF</color>
+    <color type="primary" scheme_preference="dark">#3B2A7A</color>
+  </branding>
+  <content_rating type="oars-1.1"/>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <releases>
+    <release version="1.0.1" date="2026-10-19">
+      <url type="details">https://github.com/ukpratik/kickfile/releases/tag/v1.0.1</url>
+      <description>
+        <p>New app icon. The pairing code stops working after 10 wrong tries.</p>
+      </description>
+    </release>
+    <release version="1.0.0" date="2026-10-19">
+      <description>
+        <p>First release.</p>
+      </description>
+    </release>
+  </releases>
+</component>
