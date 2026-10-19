@@ -125,6 +125,7 @@ void main() {
   }
 
   testWidgets('shots', (t) async {
+    await shot(t, 'home_firstrun', const HomeScreen());
     await seedPeers(t);
     await shot(t, 'home_light', const HomeScreen());
     await shot(t, 'home_dark', const HomeScreen(), b: Brightness.dark);

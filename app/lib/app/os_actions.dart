@@ -10,9 +10,9 @@ import 'android_bridge.dart';
 class OsActions {
   const OsActions();
 
-  Future<bool> open(String location) async {
+  Future<bool> open(String location, {String? name}) async {
     if (Platform.isAndroid) {
-      if (location.startsWith('content://')) return AndroidBridge.open(location);
+      if (location.startsWith('content://')) return AndroidBridge.open(location, name: name);
       if (Uri.tryParse(location)?.hasScheme ?? false) return launchUrl(Uri.parse(location), mode: LaunchMode.externalApplication);
       return false;
     }

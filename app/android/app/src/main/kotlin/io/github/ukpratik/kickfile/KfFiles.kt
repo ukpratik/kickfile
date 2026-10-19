@@ -338,7 +338,17 @@ class KfFiles(private val activity: Activity, messenger: BinaryMessenger) : Meth
                 "freeBytes" -> ok(StatFs(Environment.getExternalStorageDirectory().path).availableBytes)
                 "open" -> {
                     val uri = Uri.parse(call.argument<String>("ref")!!)
-                    val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, cr.getType(uri) ?: "*/*")
+                    // MediaStore often says octet-stream; the extension usually knows better.
+                    val name = call.argument<String>("name") ?: ""
+                    val fromExt = android.webkit.MimeTypeMap.getSingleton()
+                        .getMimeTypeFromExtension(name.substringAfterLast('.', "").lowercase())
+                    val type = fromExt ?: cr.getType(uri)
+                    if (type == null || type == "application/octet-stream") {
+                        // Only catch-all handlers match "any binary": say so instead (BUG-012).
+                        main.post { result.success(false) }
+                        return
+                    }
+                    val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, type)
                         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                     main.post {
                         try {

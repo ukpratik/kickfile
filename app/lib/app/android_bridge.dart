@@ -38,7 +38,8 @@ class AndroidBridge {
           mime: m['mime'] as String?,
         );
 
-  static Future<bool> open(String ref) async => await _ch.invokeMethod<bool>('open', {'ref': ref}) ?? false;
+  static Future<bool> open(String ref, {String? name}) async =>
+      await _ch.invokeMethod<bool>('open', {'ref': ref, 'name': name}) ?? false;
   static Future<bool> reveal(String ref) async => await _ch.invokeMethod<bool>('reveal', {'ref': ref}) ?? false;
 
   static Future<void> foreground(String title, String text, int progress) =>

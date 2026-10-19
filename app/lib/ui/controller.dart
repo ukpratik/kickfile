@@ -175,7 +175,7 @@ class UiController extends ChangeNotifier {
 
   Future<void> open(String? location, {String? name}) async {
     if (location == null) return toast('This file was moved or deleted.');
-    if (await s.os.open(location)) return;
+    if (await s.os.open(location, name: name)) return;
     if (Platform.isAndroid) {
       // BUG-012: Android tells us when no app handles the type.
       final ext = (name ?? '').contains('.') ? name!.split('.').last : null;
