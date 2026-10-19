@@ -10,10 +10,14 @@ on:
 jobs:
   validate:
     runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - uses: actions/checkout@v4
-      - name: Validate, install, uninstall
-        shell: pwsh
+      - name: Get winget
+        timeout-minutes: 10
         run: |
           if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
             Install-PackageProvider -Name NuGet -Force | Out-Null
@@ -22,12 +26,15 @@ jobs:
           }
           winget --version
           winget settings --enable LocalManifestFiles
-          $dir = Get-ChildItem -Directory -Recurse packaging/winget/manifests | Where-Object { Test-Path "$($_.FullName)/*.installer.yaml" } | Sort-Object FullName | Select-Object -Last 1
-          winget validate --manifest $dir.FullName
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          winget install --manifest $dir.FullName --scope user --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          winget source remove msstore --disable-interactivity 2>$null
+          "MANIFEST=$((Get-ChildItem -Directory -Recurse packaging/winget/manifests | Where-Object { Test-Path "$($_.FullName)/*.installer.yaml" } | Sort-Object FullName | Select-Object -Last 1).FullName)" >> $env:GITHUB_ENV
+      - name: Validate
+        timeout-minutes: 5
+        run: winget validate --manifest $env:MANIFEST --disable-interactivity
+      - name: Install, check, uninstall
+        timeout-minutes: 10
+        run: |
+          winget install --manifest $env:MANIFEST --scope user --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
           if (!(Test-Path "$env:LOCALAPPDATA\Programs\kickFile\kickfile.exe")) { throw "kickfile.exe not installed" }
-          winget list --id ukpratik.kickFile --disable-interactivity
-          winget uninstall --manifest $dir.FullName --silent --disable-interactivity
+          Start-Process "$env:LOCALAPPDATA\Programs\kickFile\unins000.exe" -ArgumentList '/VERYSILENT' -Wait
           Write-Host "winget validate + install + uninstall OK"

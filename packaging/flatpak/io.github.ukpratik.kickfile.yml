@@ -1,7 +1,7 @@
 # Flatpak manifest (Flathub). Repackages the release's Linux bundle and adds the files a desktop needs.
 app-id: io.github.ukpratik.kickfile
 runtime: org.freedesktop.Platform
-runtime-version: '25.08'
+runtime-version: '26.08'
 sdk: org.freedesktop.Sdk
 command: kickfile
 finish-args:

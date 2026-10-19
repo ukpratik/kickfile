@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-26.08
       options: --privileged
     steps:
       - uses: actions/checkout@v4
@@ -22,6 +22,7 @@ jobs:
           bundle: kickfile.flatpak
           manifest-path: packaging/flatpak/io.github.ukpratik.kickfile.yml
           cache-key: flatpak-builder-${{ github.sha }}
+          mirror-screenshots-url: https://dl.flathub.org/media
       - name: Flathub linter
         run: |
           flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
