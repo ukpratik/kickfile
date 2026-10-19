@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "io.github.ukpratik.kickfile"
-    compileSdk = 37 // permission_handler needs 37+
+    compileSdk { version = release(37) { minorApiLevel = 0 } } // permission_handler needs 37+
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
