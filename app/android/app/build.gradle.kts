@@ -17,8 +17,6 @@ android {
 
     defaultConfig {
         applicationId = "io.github.ukpratik.kickfile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26 // A-03: Android 8.0
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
@@ -29,12 +27,30 @@ android {
         versionName = flutter.versionName
     }
 
+    // Release signing comes from ~/.gradle/gradle.properties (kickfile.release.*), never from git.
+    // Without those properties the release build is unsigned, which is what F-Droid expects.
+    signingConfigs {
+        val storeFilePath = providers.gradleProperty("kickfile.release.storeFile").orNull
+        if (storeFilePath != null) {
+            create("release") {
+                storeFile = file(storeFilePath)
+                storePassword = providers.gradleProperty("kickfile.release.storePassword").get()
+                keyAlias = providers.gradleProperty("kickfile.release.keyAlias").get()
+                keyPassword = providers.gradleProperty("kickfile.release.keyPassword").get()
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
         }
+    }
+
+    // No Google-signed dependency metadata blob in the APK (F-Droid rejects it).
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 }
 
