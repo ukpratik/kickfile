@@ -5,7 +5,7 @@ import 'json_store.dart';
 
 enum Direction { incoming, outgoing }
 
-enum HistoryStatus { waiting, active, paused, done, partial, failed, cancelled, declined, missed, expired, busy }
+enum HistoryStatus { waiting, active, paused, done, partial, failed, cancelled, declined, missed, expired, busy, interrupted }
 
 @immutable
 class HistoryItem {
@@ -164,6 +164,14 @@ class HistoryStore extends ChangeNotifier {
     final entries = <HistoryEntry>[
       for (final e in (j?['entries'] as List? ?? const [])) ?HistoryEntry.fromJson(e),
     ];
+    // Outgoing rows left at Sending/Waiting by a quit can never finish (BUG-007).
+    for (var i = 0; i < entries.length; i++) {
+      final e = entries[i];
+      if (e.direction == Direction.outgoing &&
+          (e.status == HistoryStatus.active || e.status == HistoryStatus.waiting || e.status == HistoryStatus.paused)) {
+        entries[i] = e.copyWith(status: HistoryStatus.interrupted);
+      }
+    }
     final store = HistoryStore(file, entries).._prune();
     return store;
   }

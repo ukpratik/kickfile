@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -76,9 +78,20 @@ class SendJobCard extends StatelessWidget {
               ],
             ),
           ] else
+            // Trust can be one-way: the other side may still ask (BUG-009).
             Padding(
               padding: const EdgeInsets.only(top: KfSpace.s2),
-              child: Text(formatCountdown(left), style: tt.labelLarge),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Code, if $peer asks: ${formatCode(verificationCode(context.services.node.fingerprint, job.endpoint.fingerprint))}',
+                      style: tt.bodySmall,
+                    ),
+                  ),
+                  Text(formatCountdown(left), style: tt.labelLarge),
+                ],
+              ),
             ),
         ];
         actions = [OutlinedButton(onPressed: job.cancel, child: const Text('Cancel'))];
@@ -115,11 +128,13 @@ class SendJobCard extends StatelessWidget {
           _Title(
             icon: LucideIcons.pause,
             color: kf.warning,
-            title: waiting ? 'Paused · $what to $peer' : 'Reconnecting to $peer…',
+            title: job.error?.code == KfErrorCode.noSpace
+                ? '$peer is out of space'
+                : (waiting ? 'Paused · $what to $peer' : 'Reconnecting to $peer…'),
           ),
           Text(
             job.error?.code == KfErrorCode.noSpace
-                ? '$peer is out of space. Free up some space and tap Resume.'
+                ? '$peer is out of space. Free up ${formatBytes(job.totalBytes - job.sentBytes)} on it and tap Resume. The part already sent is kept.'
                 : waiting
                 ? 'Open kickFile on $peer, on the same Wi-Fi, then resume. Files already sent are skipped.'
                 : 'Connection dropped · resumes by itself for 30 s',
@@ -133,7 +148,7 @@ class SendJobCard extends StatelessWidget {
           TextButton(onPressed: job.cancel, child: const Text('Cancel transfer')),
         ];
       case SendState.done:
-        final took = (job.finishedAt ?? DateTime.now()).difference(job.startedAt);
+        final took = job.clock.elapsed;
         body = [
           _Title(icon: LucideIcons.circleCheck, color: kf.success, title: job.fileCount == 0 ? 'Sent to $peer' : 'Done · ${formatBytes(job.totalBytes)} in ${formatDuration(took)}'),
           Text(job.fileCount == 0 ? 'Text' : '$what to $peer · full quality, checked', style: tt.bodySmall),
@@ -141,7 +156,7 @@ class SendJobCard extends StatelessWidget {
         actions = [TextButton(onPressed: () => ui.dismiss(job.id), child: const Text('Dismiss'))];
       case SendState.partial:
         final failed = job.failedItems;
-        final took = (job.finishedAt ?? DateTime.now()).difference(job.startedAt);
+        final took = job.clock.elapsed;
         body = [
           _Title(icon: LucideIcons.triangleAlert, color: kf.warning, title: '${job.doneFiles} of ${job.fileCount} sent to $peer'),
           Text('${formatBytes(job.sentBytes)} in ${formatDuration(took)} · ${failed.length} didn\'t send', style: tt.bodySmall),
@@ -218,7 +233,7 @@ class SendJobCard extends StatelessWidget {
 
   Future<void> _confirmCancel(BuildContext context, SendJob job) async {
     // Under 10 s it stops at once; after that it asks first (US-006 v2.2).
-    if (DateTime.now().difference(job.startedAt) < const Duration(seconds: 10)) {
+    if (job.clock.elapsed < const Duration(seconds: 10)) {
       await job.cancel();
       return;
     }
@@ -290,6 +305,40 @@ class IncomingCard extends StatelessWidget {
   }
 }
 
+/// This device ran out of space while receiving (BUG-017). Only the sender can resume.
+class OutOfSpaceCard extends StatelessWidget {
+  const OutOfSpaceCard({super.key, required this.session});
+  final IncomingSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = session;
+    final tt = Theme.of(context).textTheme;
+    final kf = KfColors.of(context);
+    final pct = s.totalBytes == 0 ? 0 : s.receivedBytes * 100 ~/ s.totalBytes;
+    final current = s.files.where((f) => !f.done).map((f) => f.item.name).firstOrNull ?? countFiles(s.fileCount);
+    final where = Platform.isAndroid ? 'This phone' : (Platform.isMacOS ? 'This Mac' : 'This computer');
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(KfSpace.s4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Title(icon: LucideIcons.hardDrive, color: kf.warning, title: '$where is out of space'),
+            Text(
+              '$current from ${s.senderName} stopped at $pct%. Free up ${formatBytes(s.totalBytes - s.receivedBytes)}, '
+              'then tap Resume on ${s.senderName}. The part already received is kept for 24 hours.',
+              style: tt.bodySmall,
+            ),
+            const SizedBox(height: KfSpace.s3),
+            TextButton(onPressed: () => context.ui.dismiss('nospace:${s.id}'), child: const Text('Dismiss')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Done / partial / cancelled summary for something we received.
 class ReceivedCard extends StatelessWidget {
   const ReceivedCard({super.key, required this.session});
@@ -301,7 +350,7 @@ class ReceivedCard extends StatelessWidget {
     final ui = context.ui;
     final tt = Theme.of(context).textTheme;
     final kf = KfColors.of(context);
-    final took = DateTime.now().difference(s.createdAt);
+    final took = s.clock.elapsed; // frozen at finish (BUG-001)
     final files = s.files.where((f) => f.done).toList();
     final texts = s.items.values.where((i) => i.item.kind == ItemKind.text).toList();
     final firstLoc = files.isEmpty ? null : files.first.location;
@@ -335,10 +384,11 @@ class ReceivedCard extends StatelessWidget {
               children: [
                 if (texts.isNotEmpty) ...[
                   FilledButton.tonal(onPressed: () => copyText(context, texts.first.item.text ?? ''), child: const Text('Copy')),
-                  if (Uri.tryParse(texts.first.item.text?.trim() ?? '')?.hasScheme ?? false)
+                  if (isWebLink(texts.first.item.text ?? ''))
                     TextButton(onPressed: () => ui.s.os.open(texts.first.item.text!.trim()), child: const Text('Open link')),
                 ],
-                if (files.length == 1) FilledButton.tonal(onPressed: () => ui.open(firstLoc), child: const Text('Open')),
+                if (files.length == 1)
+                  FilledButton.tonal(onPressed: () => ui.open(firstLoc, name: files.first.item.name), child: const Text('Open')),
                 if (files.isNotEmpty) TextButton(onPressed: () => ui.reveal(firstLoc), child: Text(ui.revealLabel)),
                 TextButton(onPressed: () => ui.dismiss('in:${s.id}'), child: const Text('Dismiss')),
               ],

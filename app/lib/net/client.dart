@@ -23,21 +23,28 @@ class PeerEndpoint {
 /// Lets the sender abort an upload in flight (Cancel).
 class UploadHandle {
   HttpClientRequest? _req;
+  void Function(KfError)? _fail;
   bool _aborted = false;
   bool get aborted => _aborted;
 
   void abort() {
     _aborted = true;
+    // Fail our own body stream too: a backpressured addStream ignores req.abort.
+    _fail?.call(KfError(KfErrorCode.cancelled));
     _req?.abort(KfError(KfErrorCode.cancelled));
   }
 }
 
 /// HTTPS client for protocol v1: pins the peer certificate and signs requests.
 class KfClient {
-  KfClient(this.me, {this.connectTimeout = const Duration(seconds: 5)});
+  KfClient(this.me, {this.connectTimeout = const Duration(seconds: 5), this.stallAfter = const Duration(seconds: 15)});
 
   final DeviceIdentity me;
   final Duration connectTimeout;
+
+  /// An upload with no bytes moving for this long is aborted, so the sender shows
+  /// "Reconnecting…" instead of frozen numbers (BUG-004).
+  final Duration stallAfter;
   final _pinned = <String, HttpClient>{};
 
   void close() {
@@ -136,10 +143,60 @@ class KfClient {
       if (handle?.aborted ?? false) throw KfError(KfErrorCode.cancelled);
       req.contentLength = length;
       req.headers.contentType = ContentType.binary;
-      await req.addStream(data);
-      final res = await req.close();
-      final j = await _readJson(res);
-      return j['received'] as int? ?? 0;
+      // We own the body stream so a stall or a Cancel can end a backpressured addStream,
+      // which HttpClientRequest.abort alone doesn't (BUG-004).
+      var moved = DateTime.now();
+      var stalled = false;
+      final body = StreamController<List<int>>();
+      late final StreamSubscription<List<int>> source;
+      // A paused subscription holds back errors too, so a stalled addStream can't be failed
+      // through its own stream: race it against this instead.
+      final failure = Completer<void>();
+      var failed = false;
+      void fail(KfError e) {
+        if (failed) return;
+        failed = true;
+        unawaited(source.cancel());
+        unawaited(body.close());
+        req.abort(e);
+        failure.completeError(e);
+      }
+
+      source = data.listen(
+        (c) {
+          moved = DateTime.now();
+          body.add(c);
+        },
+        onError: (Object e, StackTrace st) => failed ? null : body.addError(e, st),
+        onDone: () => failed ? null : body.close(),
+      );
+      body
+        ..onPause = source.pause
+        ..onResume = source.resume
+        ..onCancel = () => source.cancel();
+      handle?._fail = fail;
+      final watchdog = Timer.periodic(Duration(milliseconds: (stallAfter.inMilliseconds / 3).ceil()), (_) {
+        if (DateTime.now().difference(moved) > stallAfter) {
+          stalled = true;
+          fail(KfError(KfErrorCode.unreachable, 'stalled'));
+        }
+      });
+      try {
+        if (handle?.aborted ?? false) fail(KfError(KfErrorCode.cancelled));
+        final sending = req.addStream(body.stream);
+        unawaited(sending.catchError((Object _) {})); // may outlive a stall; its error is moot
+        await Future.any([sending, failure.future]);
+        final res = await req.close().timeout(stallAfter + const Duration(seconds: 5));
+        final j = await _readJson(res).timeout(stallAfter + const Duration(seconds: 5));
+        return j['received'] as int? ?? 0;
+      } catch (e) {
+        if (stalled) throw KfError(KfErrorCode.unreachable, 'stalled');
+        if (handle?.aborted ?? false) throw KfError(KfErrorCode.cancelled);
+        rethrow;
+      } finally {
+        watchdog.cancel();
+        handle?._fail = null;
+      }
     } on KfError {
       rethrow;
     } catch (e) {

@@ -18,6 +18,9 @@ abstract class ShellActions {
 
   /// Linux only, once: "Keep receiving in the background?" Returns true to keep running.
   Future<bool> askKeepInBackground();
+
+  /// macOS/Windows, once: "kickFile is still running" (BUG-015).
+  Future<void> firstCloseNotice();
   Future<void> quit();
 }
 
@@ -125,6 +128,7 @@ class DesktopShell with WindowListener, TrayListener {
       await windowManager.minimize();
       return;
     }
+    await actions.firstCloseNotice();
     await windowManager.hide();
   }
 

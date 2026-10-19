@@ -21,9 +21,10 @@ class SpeedMeter {
     }
   }
 
-  /// Bytes per second, 0 until there are two samples.
+  /// Bytes per second; 0 until there are two samples, and 0 once nothing has moved for 2 s.
   double get bytesPerSecond {
     if (_samples.length < 2) return 0;
+    if (DateTime.now().millisecondsSinceEpoch - _samples.last.$1 > 2000) return 0;
     final dt = _samples.last.$1 - _samples.first.$1;
     if (dt <= 0) return 0;
     return (_samples.last.$2 - _samples.first.$2) * 1000 / dt;
@@ -34,6 +35,23 @@ class SpeedMeter {
     if (bps <= 0) return null;
     return Duration(milliseconds: (remaining / bps * 1000).round());
   }
+}
+
+/// Time actually spent moving data: start/stop around pauses (BUG-001).
+class ActiveClock {
+  Duration _total = Duration.zero;
+  DateTime? _since;
+
+  void start() => _since ??= DateTime.now();
+
+  void stop() {
+    final s = _since;
+    if (s == null) return;
+    _total += DateTime.now().difference(s);
+    _since = null;
+  }
+
+  Duration get elapsed => _total + (_since == null ? Duration.zero : DateTime.now().difference(_since!));
 }
 
 /// Captures the digest from a chunked SHA-256 conversion.

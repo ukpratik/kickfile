@@ -140,6 +140,25 @@ class Discovery extends ChangeNotifier {
     await _startBroadcast();
   }
 
+  /// A verified request from [fp] reached us: it's online at [host] (BUG-011).
+  /// The port stays what we know; liveness pings correct it if needed.
+  void markContact(String fp, String? host) {
+    final record = node.peers[fp];
+    final l = _live.putIfAbsent(fp, () => LiveDevice(fp));
+    if (host != null && host != l.host) {
+      l
+        ..host = host
+        ..port = record?.port ?? kDefaultPort;
+    }
+    l
+      ..failures = 0
+      ..lastOk = DateTime.now();
+    if (!l.online) {
+      l.online = true;
+      notifyListeners();
+    }
+  }
+
   /// A device we just paired with or reached directly.
   void addReachable(DeviceInfo info, String host) {
     final l = _live.putIfAbsent(info.fingerprint, () => LiveDevice(info.fingerprint))
@@ -283,7 +302,8 @@ class Discovery extends ChangeNotifier {
       notifyListeners();
       if (nw.addresses.isNotEmpty) unawaited(refresh());
     }
-    await Future.wait([for (final l in _live.values.where((l) => l.online)) _ping(l)]);
+    // Every device we have an address for, online or not: they come back by themselves (BUG-003).
+    await Future.wait([for (final l in _live.values.where((l) => l.host != null)) _ping(l)]);
     if (_tick % 3 == 0) unawaited(_tryKnownAddresses());
   }
 

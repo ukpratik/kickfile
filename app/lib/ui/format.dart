@@ -18,10 +18,14 @@ String formatBytes(int bytes) {
   return '${s.endsWith('.0') ? s.substring(0, s.length - 2) : s} ${units[u]}';
 }
 
+/// Only real web links get an "Open link" button (BUG-019): "Note: buy milk" is not one.
+bool isWebLink(String text) => RegExp(r'^https?://\S+$', caseSensitive: false).hasMatch(text.trim());
+
 String formatSpeed(double bytesPerSecond) => '${(bytesPerSecond / 1e6).toStringAsFixed(1)} MB/s';
 
 /// `1 min 52 s`, `48 s`, `2 h 5 min`.
 String formatDuration(Duration d) {
+  if (d.inMilliseconds < 1000) return 'under 1 s';
   if (d.inHours > 0) return '${d.inHours} h ${d.inMinutes % 60} min';
   if (d.inMinutes > 0) return '${d.inMinutes} min ${d.inSeconds % 60} s';
   return '${d.inSeconds < 1 ? 1 : d.inSeconds} s';

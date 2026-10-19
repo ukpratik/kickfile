@@ -58,6 +58,7 @@ class ActivityRow extends StatelessWidget {
       HistoryStatus.declined => 'Declined',
       HistoryStatus.missed => 'Missed',
       HistoryStatus.busy => 'Busy',
+      HistoryStatus.interrupted => "Didn't finish · kickFile was closed",
     };
     final meta = [
       statusWord,
@@ -70,7 +71,7 @@ class ActivityRow extends StatelessWidget {
       if (text != null && files.isEmpty) {
         action = FilledButton.tonal(onPressed: () => copyText(context, text.text ?? ''), child: const Text('Copy'));
       } else if (single?.location != null) {
-        action = FilledButton.tonal(onPressed: () => ui.open(single!.location), child: const Text('Open'));
+        action = FilledButton.tonal(onPressed: () => ui.open(single!.location, name: single.name), child: const Text('Open'));
       } else if (files.isNotEmpty && files.first.location != null) {
         action = TextButton(onPressed: () => ui.reveal(files.first.location), child: const Text('Show'));
       }
@@ -134,7 +135,7 @@ class ActivityRow extends StatelessWidget {
                   ),
                   onTap: i.kind == ItemKind.text
                       ? () => copyText(c, i.text ?? '')
-                      : (i.location == null ? null : () => ui.open(i.location)),
+                      : (i.location == null ? null : () => ui.open(i.location, name: i.name)),
                   trailing: i.location == null
                       ? null
                       : IconButton(tooltip: ui.revealLabel, icon: const Icon(LucideIcons.folderOpen), onPressed: () => ui.reveal(i.location)),

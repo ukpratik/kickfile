@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
@@ -63,6 +64,11 @@ class SettingsScreen extends StatelessWidget {
               const SectionLabel('Receiving'),
               GroupCard(
                 children: [
+                  // BUG-013: Android picks these folders so the gallery and Files find them.
+                  if (Platform.isAndroid) ...const [
+                    ListTile(title: Text('Photos and videos'), subtitle: Text('Pictures/kickFile · Movies/kickFile')),
+                    ListTile(title: Text('Other files'), subtitle: Text('Download/kickFile')),
+                  ],
                   if (isDesktop)
                     ListTile(
                       title: const Text('Save files to'),
@@ -230,19 +236,35 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _exportLogs(BuildContext context) async {
     final ui = context.ui;
+    final fa = context.services.files;
     final files = log.files();
     if (files.isEmpty) {
       ui.toast('No logs yet.');
       return;
     }
-    final loc = await getSaveLocation(suggestedName: 'kickfile-logs.txt');
-    if (loc == null) return;
-    final out = File(loc.path).openWrite();
-    for (final f in files) {
-      out.write(await f.readAsString());
+    try {
+      final text = StringBuffer();
+      for (final f in files) {
+        text.write(await f.readAsString());
+      }
+      final bytes = utf8.encode(text.toString());
+      if (Platform.isAndroid) {
+        // BUG-014: no save dialog on Android; write to Download/kickFile like a received file.
+        final ref = await fa.createPartial('logs', 'logs', 'kickfile-logs.txt', bytes.length);
+        final w = await fa.openPartial(ref, 0);
+        await w.add(bytes);
+        await w.close();
+        await fa.finalize(ref, 'kickfile-logs.txt');
+        ui.toast('Logs saved to Download/kickFile');
+        return;
+      }
+      final loc = await getSaveLocation(suggestedName: 'kickfile-logs.txt');
+      if (loc == null) return;
+      await File(loc.path).writeAsBytes(bytes, flush: true);
+      ui.toast('Logs saved to ${p.basename(loc.path)}');
+    } catch (_) {
+      ui.toast("Couldn't save the logs. Try again.");
     }
-    await out.close();
-    ui.toast('Logs saved to ${p.basename(loc.path)}');
   }
 
   void _privacy(BuildContext context) => showDialog<void>(

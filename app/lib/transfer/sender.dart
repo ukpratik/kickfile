@@ -68,6 +68,9 @@ class SendJob extends ChangeNotifier {
   final DateTime startedAt = DateTime.now();
   DateTime? finishedAt;
   final meter = SpeedMeter();
+
+  /// Time actually sending: from accept, minus pauses. Same measure as the receiver (BUG-001).
+  final clock = ActiveClock();
   late final List<SendItem> items;
   late final TransferOffer offer;
   SendItem? current;
@@ -148,6 +151,9 @@ class SendJob extends ChangeNotifier {
           case KfErrorCode.unreachable || KfErrorCode.io || KfErrorCode.busy || KfErrorCode.unknownTransfer
               when everAccepted:
             if (!await _waitToRetry(e)) return _finish(SendState.cancelled);
+          // Out of space mid-transfer: wait for the user to free space and tap Resume (BUG-017).
+          case KfErrorCode.noSpace when everAccepted:
+            if (!await _waitForResume(e)) return _finish(SendState.cancelled);
           default:
             return _finish(SendState.failed, e);
         }
@@ -178,6 +184,7 @@ class SendJob extends ChangeNotifier {
 
   Future<bool> _waitToRetry(KfError e) async {
     error = e;
+    clock.stop();
     _set(SendState.paused);
     final deadline = DateTime.now().add(autoRetryFor);
     while (DateTime.now().isBefore(deadline)) {
@@ -190,6 +197,13 @@ class SendJob extends ChangeNotifier {
         // Still away.
       }
     }
+    return _waitForResume(e);
+  }
+
+  Future<bool> _waitForResume(KfError e) async {
+    error = e;
+    clock.stop();
+    state = SendState.paused;
     _resumeSignal = Completer<void>();
     notifyListeners();
     await _resumeSignal!.future;
@@ -205,6 +219,7 @@ class SendJob extends ChangeNotifier {
     onAccepted();
     if (_cancelled) throw KfError(KfErrorCode.cancelled);
     error = null;
+    clock.start();
     _set(SendState.active);
     meter.reset();
 
@@ -297,10 +312,25 @@ class SendJob extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _disposed = false;
+
+  @override
+  void notifyListeners() {
+    // A job can still be winding down when the app shuts down.
+    if (!_disposed) super.notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   void _finish(SendState s, [KfError? e]) {
     if (isFinished) return;
     state = s;
     error = e ?? error;
+    clock.stop();
     finishedAt = DateTime.now();
     current = null;
     log.info('send', 'finished ${s.name} $doneFiles/$fileCount');

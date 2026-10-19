@@ -173,8 +173,20 @@ class UiController extends ChangeNotifier {
     send(peer, sources);
   }
 
-  Future<void> open(String? location) async {
-    if (location == null || !await s.os.open(location)) toast('This file was moved or deleted.');
+  Future<void> open(String? location, {String? name}) async {
+    if (location == null) return toast('This file was moved or deleted.');
+    if (await s.os.open(location)) return;
+    if (Platform.isAndroid) {
+      // BUG-012: Android tells us when no app handles the type.
+      final ext = (name ?? '').contains('.') ? name!.split('.').last : null;
+      toast(
+        ext == null ? 'No app on this phone opens this file.' : 'No app on this phone opens .$ext files.',
+        action: 'Show in folder',
+        onAction: () => reveal(location),
+      );
+      return;
+    }
+    toast('This file was moved or deleted.');
   }
 
   Future<void> reveal(String? location) async {

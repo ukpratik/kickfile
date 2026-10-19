@@ -147,7 +147,8 @@ class PeerStore extends ChangeNotifier {
 
   /// A trusted device with the same name and platform but a different key (US-008).
   PeerRecord? identityChangedFor(String fp, String name, DevicePlatform platform) {
-    if (_peers[fp] != null) return null;
+    // Discovery may already have stored the new key (untrusted): that must not hide the warning (BUG-010).
+    if (_peers[fp]?.trusted ?? false) return null;
     for (final p in _peers.values) {
       if (p.trusted && p.name == name && p.platform == platform && p.fingerprint != fp) return p;
     }

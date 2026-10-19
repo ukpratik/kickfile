@@ -74,11 +74,13 @@ class AppServices {
     await node.start();
 
     final discovery = Discovery(node);
+    node.receiver.onPeerContact = discovery.markContact;
     final notifier = Notifier();
     await notifier.init();
     final s = AppServices._(node, discovery, notifier, files, defaultSave);
     s._keepAwake();
-    unawaited(discovery.start());
+    // Discovery triggers the macOS local-network prompt: not on the welcome screen (BUG-018).
+    if (node.settings.value.onboarded) unawaited(discovery.start());
     return s;
   }
 

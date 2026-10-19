@@ -65,6 +65,7 @@ class KickNode {
     Duration staleAfter = const Duration(seconds: 30),
     Duration autoRetryFor = const Duration(seconds: 30),
     Duration retryEvery = const Duration(seconds: 3),
+    Duration stallAfter = const Duration(seconds: 15),
   }) async {
     await dataDir.create(recursive: true);
     final idFile = JsonFile(File(p.join(dataDir.path, 'identity.json')), privateFile: true);
@@ -84,7 +85,7 @@ class KickNode {
     );
     final peers = await PeerStore.load(JsonFile(File(p.join(dataDir.path, 'peers.json'))));
     final history = await HistoryStore.load(JsonFile(File(p.join(dataDir.path, 'history.json'))));
-    final client = KfClient(identity);
+    final client = KfClient(identity, stallAfter: stallAfter);
 
     late final KickNode node;
     final receiver = ReceiveManager(

@@ -93,6 +93,7 @@ class _KickAppState extends State<KickApp> implements ShellActions {
     if (c != null && c.mounted) unawaited(showIncomingPrompt(c, req));
     final d = await req.decision;
     unawaited(s.notifier.cancel(Notifier.incomingId));
+    if (req.cancelledBySender) ui.toast('${req.senderName} cancelled');
     return d;
   }
 
@@ -203,6 +204,27 @@ class _KickAppState extends State<KickApp> implements ShellActions {
   }
 
   @override
+  Future<void> firstCloseNotice() async {
+    final settings = s.node.settings;
+    if (settings.value.promptsShown.contains('close_notice')) return;
+    await settings.markPromptShown('close_notice');
+    final c = ui.navigatorKey.currentContext;
+    if (c == null || !c.mounted) return;
+    await showDialog<void>(
+      context: c,
+      builder: (d) => AlertDialog(
+        title: const Text('kickFile is still running'),
+        content: Text(
+          Platform.isMacOS
+              ? 'It stays in the menu bar so your phone can send files to this Mac. Quit from the menu-bar icon or with ⌘Q.'
+              : 'It stays in the system tray so your phone can send files to this PC. Right-click the tray icon to quit.',
+        ),
+        actions: [FilledButton(onPressed: () => Navigator.pop(d), child: const Text('OK'))],
+      ),
+    );
+  }
+
+  @override
   Future<void> quit() async {
     await s.shutdown();
     exit(0);
@@ -228,7 +250,15 @@ class _KickAppState extends State<KickApp> implements ShellActions {
             ThemeChoice.dark => ThemeMode.dark,
             ThemeChoice.system => ThemeMode.system,
           },
-          home: v.onboarded ? const HomeScreen() : WelcomeScreen(onDone: () => setState(() {})),
+          home: v.onboarded
+              ? const HomeScreen()
+              : WelcomeScreen(
+                  onDone: () {
+                    unawaited(s.discovery.start());
+                    _android?.onOnboarded();
+                    setState(() {});
+                  },
+                ),
         );
       },
     ),

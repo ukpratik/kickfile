@@ -4,8 +4,10 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../app/discovery.dart';
+import '../../core/protocol.dart';
 import '../../net/netinfo.dart';
 import '../../storage/peers.dart';
 import '../../transfer/receiver.dart';
@@ -212,10 +214,29 @@ class _HomeScreenState extends State<HomeScreen> {
     final recent = s.node.history.entries.take(5).toList();
     final network = s.discovery.network;
 
+    // BUG-002: every transfer still moving gets a card, but only ONE finished card shows
+    // (the newest). A fully successful one collapses into Recent after 6 s; anything that
+    // needs attention (text, partial, failed, paused, out of space) stays until dismissed.
+    final now = DateTime.now();
+    bool expired(DateTime? at, bool clean) =>
+        clean && at != null && now.difference(at) > const Duration(seconds: 6);
+    final live = jobs.where((j) => !j.isFinished).toList();
+    final done = <(DateTime, Widget)>[
+      for (final j in jobs.where((j) => j.isFinished))
+        if (!expired(j.finishedAt, j.state == SendState.done || (j.state == SendState.cancelled && !j.cancelledByPeer)))
+          (j.finishedAt ?? now, SendJobCard(job: j)),
+      if (finished != null &&
+          !ui.dismissed.contains('in:${finished.id}') &&
+          !expired(finished.finishedAt, finished.state == SessionState.done && finished.fileCount > 0 && finished.offer.items.every((i) => i.kind != ItemKind.text)))
+        (finished.finishedAt ?? now, ReceivedCard(session: finished)),
+    ]..sort((a, b) => b.$1.compareTo(a.$1));
+    final noSpace = s.node.receiver.pausedSessions.where((p) => p.outOfSpace && !ui.dismissed.contains('nospace:${p.id}')).firstOrNull;
+
     final cards = <Widget>[
       if (incoming != null && incoming.state == SessionState.active) IncomingCard(session: incoming),
-      if (finished != null && !ui.dismissed.contains('in:${finished.id}')) ReceivedCard(session: finished),
-      for (final j in jobs) SendJobCard(job: j),
+      ?(noSpace == null ? null : OutOfSpaceCard(session: noSpace)),
+      for (final j in live) SendJobCard(job: j),
+      ?done.firstOrNull?.$2,
     ];
 
     return ListView(
@@ -235,6 +256,11 @@ class _HomeScreenState extends State<HomeScreen> {
           const KfBanner(tone: BannerTone.warning, text: 'A VPN may hide nearby devices.'),
         ],
         for (final c in cards) Padding(padding: const EdgeInsets.only(top: KfSpace.s3), child: c),
+        // BUG-016: desktop first run, until a first device is known (d01).
+        if (isDesktop && s.node.peers.all.isEmpty) ...[
+          const SizedBox(height: KfSpace.s3),
+          const _GetPhoneCard(),
+        ],
         SectionLabel('Devices', trailing: s.discovery.searching ? const SearchingShimmer() : null),
         GroupCard(
           children: [
@@ -439,6 +465,42 @@ class _StatusCard extends StatelessWidget {
                 await s.node.settings.update((x) => x.copyWith(visible: !visible));
                 await s.discovery.updateBroadcast();
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GetPhoneCard extends StatelessWidget {
+  const _GetPhoneCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(KfSpace.s4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(KfRadius.sm)),
+              child: QrImageView(data: kDownloadUrl, size: 96, backgroundColor: Colors.white),
+            ),
+            const SizedBox(width: KfSpace.s4),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Get kickFile on your phone', style: tt.titleMedium),
+                  const SizedBox(height: 2),
+                  Text("Scan with your phone's camera. The page picks the right store.", style: tt.bodySmall),
+                  const SizedBox(height: KfSpace.s2),
+                  Text('Already have it? Open kickFile on your phone, on the same Wi-Fi.', style: tt.bodySmall),
+                ],
+              ),
             ),
           ],
         ),

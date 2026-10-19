@@ -46,7 +46,8 @@ class _ConnectionHelpScreenState extends State<ConnectionHelpScreen> {
       final r = await Process.run('powershell', [
         '-NoProfile',
         '-Command',
-        'Start-Process -FilePath powershell -Verb RunAs -Wait -WindowStyle Hidden -ArgumentList "-NoProfile","-Command","$rule"',
+        // Report netsh's own result, not the launcher's (BUG-019).
+        '\$p = Start-Process -FilePath powershell -Verb RunAs -Wait -PassThru -WindowStyle Hidden -ArgumentList "-NoProfile","-Command","$rule; exit `\$LASTEXITCODE"; exit \$p.ExitCode',
       ]);
       if (!mounted) return;
       context.ui.toast(r.exitCode == 0

@@ -107,11 +107,12 @@ class KfServer {
         return await _json(res, 200, policy.info().toJson());
       }
 
-      final caller = _auth.verify(
+      final verified = _auth.verify(
         req.headers.value(kAuthHeader),
         method: req.method,
         pathWithQuery: pathWithQuery,
       );
+      final caller = Caller(verified.fingerprint, verified.certDer, req.connectionInfo?.remoteAddress.address);
 
       if (req.method == 'POST' && segs.length == 2 && segs[1] == 'pair') {
         final body = await _readJson(req);

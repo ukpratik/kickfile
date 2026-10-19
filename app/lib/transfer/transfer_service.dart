@@ -34,7 +34,9 @@ class TransferService extends ChangeNotifier {
   Stream<SendJob> get jobChanges => _changes.stream;
 
   List<SendJob> get jobs => List.unmodifiable(_jobs);
-  Iterable<SendJob> get activeJobs => _jobs.where((j) => !j.isFinished);
+  /// Jobs moving or about to move. A job waiting for the user's Resume isn't active:
+  /// it releases the wake lock, the Android service and the tray status (BUG-005).
+  Iterable<SendJob> get activeJobs => _jobs.where((j) => !j.isFinished && !j.waitingForResume);
   bool get hasActiveTransfer => activeJobs.isNotEmpty;
 
   SendJob send({

@@ -53,6 +53,9 @@ class IncomingRequest {
 
   final _answer = Completer<Decision>();
   bool get answered => _answer.isCompleted;
+
+  /// The sender cancelled before anyone answered (the prompt closes with a note).
+  bool cancelledBySender = false;
   Future<Decision> get decision => _answer.future;
 
   void answer(Decision d) {
@@ -67,6 +70,10 @@ enum SessionState { active, paused, done, partial, cancelled }
 class ReceivedItem {
   ReceivedItem(this.item, {this.done = false});
   final OfferItem item;
+
+  /// Bumped by every upload; a stale handler (old half-open socket) sees a newer value
+  /// and backs off without flushing, hashing or pausing (BUG-006).
+  int gen = 0;
   String? partialRef;
   int received = 0;
   Hasher? hasher;
@@ -94,6 +101,13 @@ class IncomingSession {
   final DateTime createdAt;
   SessionState state = SessionState.active;
   DateTime lastActivity = DateTime.now();
+
+  /// Time spent actually receiving (accept → finish, minus paused time) (BUG-001).
+  final clock = ActiveClock()..start();
+  DateTime? finishedAt;
+
+  /// Paused because this device ran out of space (BUG-017).
+  bool get outOfSpace => error == KfErrorCode.noSpace;
   final meter = SpeedMeter();
   ReceivedItem? current;
   KfErrorCode? error;
@@ -137,6 +151,9 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
 
   /// Called after a successful QR/short-code pairing (to close the QR screen).
   void Function(PeerRecord peer)? onPaired;
+
+  /// A verified request arrived from [fingerprint] at [host]: it's reachable (BUG-011).
+  void Function(String fingerprint, String? host)? onPeerContact;
 
   IncomingRequest? pending;
   IncomingSession? session;
@@ -239,12 +256,14 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
     final last = _lastOffer[fp];
     if (last != null && now.difference(last) < kRateLimit) throw KfError(KfErrorCode.rateLimited);
     _lastOffer[fp] = now;
-    if (_busy) throw KfError(KfErrorCode.busy);
+    onPeerContact?.call(fp, caller.host);
 
+    // Before the busy check: no await may sit between that check and `pending = req`.
     final free = await files.freeBytes();
     if (free != null && free < offer.totalBytes + 64 * 1024 * 1024) {
       throw KfError(KfErrorCode.noSpace, null, {'needed': offer.totalBytes, 'free': free});
     }
+    if (_busy) throw KfError(KfErrorCode.busy);
 
     final record = peers[fp];
     final changedFrom = peers.identityChangedFor(fp, offer.senderName, offer.senderPlatform);
@@ -280,6 +299,8 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
       req.answer(decision);
       pending = null;
       notifyListeners();
+      // The sender cancelled (or pressed Undo) while we were asking.
+      if (req.cancelledBySender || _cancelledIds.contains(offer.id)) throw KfError(KfErrorCode.cancelled);
     }
 
     final seenInfo = DeviceInfo(
@@ -356,6 +377,15 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
   }
 
   Future<OfferAnswer> _resume(IncomingSession s) async {
+    // Paused because this device was full: only resume once there's room (BUG-017).
+    // The sender learns it here, since a 507 can't reach it while it's still uploading.
+    if (s.outOfSpace) {
+      final free = await files.freeBytes();
+      final remaining = s.totalBytes - s.receivedBytes;
+      if (free != null && free < remaining) {
+        throw KfError(KfErrorCode.noSpace, null, {'needed': remaining, 'free': free});
+      }
+    }
     if (session != s) {
       if (_busy) throw KfError(KfErrorCode.busy);
       _pauseCurrent();
@@ -363,6 +393,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
       session = s;
     }
     s.state = SessionState.active;
+    s.clock.start();
     s.lastActivity = DateTime.now();
     s.error = null;
     final offsets = <String, int>{};
@@ -389,6 +420,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
       _pauseCurrent();
       _paused.remove(transferId);
       session = s = paused..state = SessionState.active;
+      s.clock.start();
     }
     if (s.senderFingerprint != caller.fingerprint) throw KfError(KfErrorCode.unauthorized);
     if (s.state == SessionState.cancelled) throw KfError(KfErrorCode.cancelled);
@@ -405,6 +437,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
     Stream<List<int>> body,
   ) async {
     final s = _sessionFor(caller, transferId);
+    onPeerContact?.call(caller.fingerprint, caller.host);
     final r = s.items[itemId] ?? (throw KfError(KfErrorCode.notFound));
     if (r.item.kind != ItemKind.file) throw KfError(KfErrorCode.invalidOffer, 'not a file');
     if (r.done) return r.item.size;
@@ -413,6 +446,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
     }
     if (offset + length != r.item.size) throw KfError(KfErrorCode.invalidOffer, 'length');
 
+    final g = ++r.gen;
     r.partialRef ??= await files.createPartial(s.id, itemId, r.item.path, r.item.size);
     final writer = await files.openPartial(r.partialRef!, offset);
     if (offset == 0) {
@@ -428,8 +462,9 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
 
     // TLS hands us ~4 KB pieces; write in 1 MiB batches (one disk call each).
     final buf = BytesBuilder(copy: true);
+    bool stale() => r.gen != g;
     Future<void> flush() async {
-      if (buf.isEmpty) return;
+      if (buf.isEmpty || stale()) return;
       final bytes = buf.takeBytes();
       await writer.add(bytes);
       r.received += bytes.length;
@@ -441,6 +476,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
     try {
       await for (final chunk in body) {
         if (s.state == SessionState.cancelled) throw KfError(KfErrorCode.cancelled);
+        if (stale()) throw KfError(KfErrorCode.unreachable, 'superseded');
         r.hasher!.add(chunk);
         buf.add(chunk);
         if (buf.length >= _writeBatch) await flush();
@@ -457,6 +493,8 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
     }
 
     if (s.state == SessionState.cancelled) throw KfError(KfErrorCode.cancelled);
+    // A newer upload of this item took over: leave the session to it.
+    if (stale()) throw KfError(KfErrorCode.unreachable, 'superseded');
     if (failure is KfError && failure.code == KfErrorCode.noSpace) {
       s.error = KfErrorCode.noSpace;
       await _pause(s);
@@ -514,7 +552,15 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
   @override
   Future<void> cancel(Caller caller, String transferId) async {
     final s = session?.id == transferId ? session : _paused[transferId];
-    if (s == null) return;
+    if (s == null) {
+      final p = pending;
+      if (p != null && p.offer.id == transferId && p.senderFingerprint == caller.fingerprint) {
+        _cancelledIds.add(transferId);
+        p.cancelledBySender = true;
+        p.answer(Decision.decline);
+      }
+      return;
+    }
     if (s.senderFingerprint != caller.fingerprint) throw KfError(KfErrorCode.unauthorized);
     s.cancelledByPeer = true;
     await _cancel(s);
@@ -553,6 +599,8 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
 
   Future<void> _close(IncomingSession s, HistoryStatus status) async {
     _saveTimer?.cancel();
+    s.clock.stop();
+    s.finishedAt = DateTime.now();
     if (session == s) session = null;
     _paused.remove(s.id);
     await files.removeTransferPartials(s.id);
@@ -574,6 +622,7 @@ class ReceiveManager extends ChangeNotifier implements ServerPolicy {
   Future<void> _pause(IncomingSession s) async {
     if (s.state != SessionState.active) return;
     s.state = SessionState.paused;
+    s.clock.stop();
     if (session == s) session = null;
     _paused[s.id] = s;
     await _saveManifest(s);

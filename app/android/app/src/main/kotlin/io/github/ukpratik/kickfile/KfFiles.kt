@@ -342,8 +342,11 @@ class KfFiles(private val activity: Activity, messenger: BinaryMessenger) : Meth
                         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                     main.post {
                         try {
-                            activity.startActivity(Intent.createChooser(intent, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                            activity.startActivity(intent)
                             result.success(true)
+                        } catch (_: android.content.ActivityNotFoundException) {
+                            // No app on this phone handles this type (BUG-012).
+                            result.success(false)
                         } catch (_: Exception) {
                             result.success(false)
                         }

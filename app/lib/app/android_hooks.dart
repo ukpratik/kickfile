@@ -34,7 +34,7 @@ class AndroidHooks with WidgetsBindingObserver {
 
   void start() {
     WidgetsBinding.instance.addObserver(this);
-    unawaited(_legacyStorage());
+    if (s.node.settings.value.onboarded) unawaited(_legacyStorage());
     _intents = AndroidBridge.intents.listen(_onIntent, onError: (Object e) => log.warn('android', 'intent ${e.runtimeType}'));
     _progress = Timer.periodic(const Duration(seconds: 1), (_) => _updateForeground());
     s.node.receiver.completed.listen((_) => _askNotificationsOnce());
@@ -42,6 +42,9 @@ class AndroidHooks with WidgetsBindingObserver {
       if (j.isFinished) _askNotificationsOnce();
     });
   }
+
+  /// After Get started: ask the Android 8–9 storage permission then, not on the welcome screen.
+  void onOnboarded() => unawaited(_legacyStorage());
 
   /// Android 8–9 save to Download/kickFile directly and need the storage permission (PRD §7).
   Future<void> _legacyStorage() async {

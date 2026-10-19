@@ -11,9 +11,12 @@ const kClockSkew = Duration(minutes: 5);
 
 /// Who sent a request, after the signature checked out.
 class Caller {
-  const Caller(this.fingerprint, this.certDer);
+  const Caller(this.fingerprint, this.certDer, [this.host]);
   final String fingerprint;
   final Uint8List certDer;
+
+  /// The address the request came from (set by the server).
+  final String? host;
 }
 
 /// Builds the `X-KF-Auth` header value for one request (ADR-002, LLD §3.1).
