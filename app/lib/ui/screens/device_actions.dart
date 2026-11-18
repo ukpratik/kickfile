@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 
+import '../../core/qr.dart';
 import '../../storage/peers.dart';
 import '../scope.dart';
 import '../theme/theme.dart';
@@ -79,6 +80,25 @@ Future<bool> confirmBlock(BuildContext context, String name) async =>
             onPressed: () => Navigator.pop(c, true),
             child: const Text('Block'),
           ),
+        ],
+      ),
+    ) ??
+    false;
+
+/// A kickfile:// link opened from another app wants to pair. Any web page can carry such
+/// a link, so the user confirms it came from their own device's Show QR screen.
+Future<bool> confirmLinkPair(BuildContext context, PairingCode code) async =>
+    await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('Connect to “${code.name}”?'),
+        content: const Text(
+          'This link asks kickFile to connect to that device and trust it. Only continue if you scanned '
+          'the code from Show QR on your own device.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Connect')),
         ],
       ),
     ) ??

@@ -8,6 +8,7 @@ import '../core/errors.dart';
 import '../core/log.dart';
 import '../core/protocol.dart';
 import '../core/qr.dart';
+import '../storage/peers.dart';
 import '../transfer/file_access.dart';
 import '../transfer/receiver.dart';
 import '../ui/controller.dart';
@@ -16,13 +17,29 @@ import 'android_bridge.dart';
 import 'notifier.dart';
 import 'services.dart';
 
+/// A kickfile:// link opened from another app (camera, browser, chat): any web page can
+/// carry one, so it pairs only after the user says yes. Null when they decline.
+/// Throws [KfError] for a link that isn't a valid kickFile code, or when pairing fails.
+Future<PeerRecord?> pairFromLink(
+  String uri, {
+  required Future<bool> Function(PairingCode code) confirm,
+  required Future<PeerRecord> Function(PairingCode code) pair,
+}) async {
+  final code = PairingCode.parse(uri);
+  if (!await confirm(code)) return null;
+  return pair(code);
+}
+
 /// Android glue: share sheet and kickfile:// links in, foreground-service progress out,
 /// and no announcing while the app is in the background (A-08, NFR-010).
 class AndroidHooks with WidgetsBindingObserver {
-  AndroidHooks(this.s, this.ui, {required this.onShare, required this.onPaired});
+  AndroidHooks(this.s, this.ui, {required this.onShare, required this.onPaired, required this.confirmPair});
 
   final AppServices s;
   final UiController ui;
+
+  /// Asks the user before a kickfile:// link from outside the app pairs with a device.
+  final Future<bool> Function(PairingCode code) confirmPair;
 
   /// Files or text shared into kickFile: the UI asks which device.
   final void Function(List<SendSource> sources) onShare;
@@ -78,8 +95,8 @@ class AndroidHooks with WidgetsBindingObserver {
         if (t != null && t.isNotEmpty) onShare([SendSource.text(t.length > kMaxTextChars ? t.substring(0, kMaxTextChars) : t)]);
       case 'link':
         try {
-          final code = PairingCode.parse(e['uri']! as String);
-          final peer = await s.node.pairWithCode(code);
+          final peer = await pairFromLink(e['uri']! as String, confirm: confirmPair, pair: s.node.pairWithCode);
+          if (peer == null) return;
           s.discovery.addReachable(
             DeviceInfo(fingerprint: peer.fingerprint, name: peer.name, platform: peer.platform, port: peer.port),
             peer.addresses.first,

@@ -1,0 +1,5 @@
+Security hardening:
+• A kickFile link opened from another app asks before it connects.
+• This device's identity key is no longer included in phone backups.
+• Sharing into kickFile only accepts files shared by other apps.
+Fixed: after sharing into kickFile while it was open, incoming files could time out without a prompt.
