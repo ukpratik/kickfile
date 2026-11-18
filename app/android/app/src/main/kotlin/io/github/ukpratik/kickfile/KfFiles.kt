@@ -492,7 +492,7 @@ class KfFiles(private val activity: Activity, messenger: BinaryMessenger) : Meth
         if (event["type"] == "share") {
             io.execute {
                 val uris = event["uris"] as List<*>
-                val items = uris.mapNotNull { describe(Uri.parse(it as String), null) }
+                val items = uris.mapNotNull { raw -> Uri.parse(raw as String).takeIf(::isShareable)?.let { describe(it, null) } }
                 main.post {
                     emit(
                         if (items.isEmpty() && uris.isNotEmpty()) mapOf("type" to "share_failed")
@@ -503,6 +503,22 @@ class KfFiles(private val activity: Activity, messenger: BinaryMessenger) : Meth
         } else {
             emit(event)
         }
+    }
+
+    /**
+     * A URI another app shared with us. Only content:// from someone else's provider:
+     * a file:// URI, or a content URI served by kickFile itself, could point at our own
+     * private files (the identity key) and get them sent to another device.
+     */
+    private fun isShareable(uri: Uri): Boolean {
+        if (uri.scheme != ContentResolver.SCHEME_CONTENT) return false
+        val authority = uri.authority ?: return false
+        val owner = try {
+            activity.packageManager.resolveContentProvider(authority, 0)?.packageName
+        } catch (_: Exception) {
+            null
+        }
+        return owner != activity.packageName
     }
 
     private fun emit(e: Map<String, Any?>) {

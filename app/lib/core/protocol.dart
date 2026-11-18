@@ -7,7 +7,7 @@ import 'names.dart';
 const kProtocolVersion = 1;
 
 /// The app version shown in Settings › About; must match `version:` in pubspec.yaml (checked by a test).
-const kAppVersion = '1.0.1';
+const kAppVersion = '1.0.2';
 const kDefaultPort = 47420;
 const kServiceType = '_kickfile._tcp';
 const kAuthHeader = 'x-kf-auth';

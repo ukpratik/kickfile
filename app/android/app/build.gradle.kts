@@ -27,16 +27,19 @@ android {
         versionName = flutter.versionName
     }
 
-    // Release signing comes from ~/.gradle/gradle.properties (kickfile.release.*), never from git.
+    // Release signing comes from ~/.gradle/gradle.properties, never from git:
+    // kickfile.release.* (GitHub APKs) by default, kickfile.upload.* (Play upload key) with
+    // -PkickfilePlay=true (or ORG_GRADLE_PROJECT_kickfilePlay=true).
     // Without those properties the release build is unsigned, which is what F-Droid expects.
     signingConfigs {
-        val storeFilePath = providers.gradleProperty("kickfile.release.storeFile").orNull
+        val key = if (providers.gradleProperty("kickfilePlay").orNull == "true") "upload" else "release"
+        val storeFilePath = providers.gradleProperty("kickfile.$key.storeFile").orNull
         if (storeFilePath != null) {
             create("release") {
                 storeFile = file(storeFilePath)
-                storePassword = providers.gradleProperty("kickfile.release.storePassword").get()
-                keyAlias = providers.gradleProperty("kickfile.release.keyAlias").get()
-                keyPassword = providers.gradleProperty("kickfile.release.keyPassword").get()
+                storePassword = providers.gradleProperty("kickfile.$key.storePassword").get()
+                keyAlias = providers.gradleProperty("kickfile.$key.keyAlias").get()
+                keyPassword = providers.gradleProperty("kickfile.$key.keyPassword").get()
             }
         }
     }

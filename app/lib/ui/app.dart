@@ -9,12 +9,14 @@ import '../app/desktop_shell.dart';
 import '../app/notifier.dart';
 import '../app/services.dart';
 import '../core/protocol.dart';
+import '../core/qr.dart';
 import '../storage/settings.dart';
 import '../transfer/receiver.dart';
 import 'controller.dart';
 import 'format.dart';
 import 'scope.dart';
 import 'screens/home.dart';
+import 'screens/device_actions.dart';
 import 'screens/incoming_prompt.dart';
 import 'screens/qr_screen.dart';
 import 'screens/share_target.dart';
@@ -52,6 +54,7 @@ class _KickAppState extends State<KickApp> implements ShellActions {
           if (c != null) unawaited(showShareTarget(c, sources));
         },
         onPaired: (name) => ui.toast('Connected to $name'),
+        confirmPair: _confirmLinkPair,
       )..start();
     }
     if (isDesktop) {
@@ -61,6 +64,16 @@ class _KickAppState extends State<KickApp> implements ShellActions {
       unawaited(shell.setLaunchAtLogin(s.node.settings.value.launchAtLogin));
       _trayTimer = Timer.periodic(const Duration(seconds: 2), (_) => _updateTray());
     }
+  }
+
+  /// A link can arrive before the first frame (cold start from the camera): wait for a navigator.
+  Future<bool> _confirmLinkPair(PairingCode code) async {
+    for (var i = 0; i < 50 && ui.navigatorKey.currentContext == null; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    final c = ui.navigatorKey.currentContext;
+    if (c == null || !c.mounted) return false;
+    return confirmLinkPair(c, code);
   }
 
   @override

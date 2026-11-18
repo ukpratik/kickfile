@@ -134,7 +134,7 @@ kickfile://c?v=1&a=192.168.1.23,10.0.0.4&p=47420&fp=<64 hex>&s=482913&n=Arjun%27
 | `s` | One-time pairing secret | `^\d{6}$` |
 | `n` | Device name | Control characters removed, cut to 64 characters |
 
-Parameters are query-encoded. On Android the link is also an intent (`VIEW` with scheme `kickfile`), so a camera app can open it.
+Parameters are query-encoded. On Android the link is also an intent (`VIEW` with scheme `kickfile`), so a camera app can open it. Because any web page or app can open such a link, the app asks the user to confirm before pairing from one; a code scanned inside the app pairs directly.
 
 The secret is a random number from 100000 to 999999. It is valid for 10 minutes and is cleared after one successful pairing or when the QR screen closes.
 

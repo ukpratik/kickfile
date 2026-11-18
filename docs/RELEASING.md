@@ -7,9 +7,9 @@ One tag, several channels:
 | **GitHub Releases** | Android APKs | Maintainer, locally | Release key (`kickfile`) |
 | | macOS DMG, Windows zip, Linux tar.gz | `release.yml` on the tag | macOS: ad-hoc (not notarised); Windows/Linux: unsigned |
 | **F-Droid** | Android APK, built from the tag | F-Droid | F-Droid's key |
-| **Google Play** *(later)* | App bundle | Maintainer | Upload key; Play re-signs |
+| **Google Play** | App bundle | Maintainer, locally | Upload key (`kickfile-upload`); Play re-signs with the release key |
 
-The Android builds have different signers, so a phone can't update one with another: to switch channel, uninstall first. Nothing secret is ever in this repository; `*.jks`, `*.keystore` and `key.properties` are git-ignored.
+GitHub and Play installs end up signed by the same release key (Play App Signing holds it), so they can update each other. F-Droid installs have F-Droid's key: to switch to or from F-Droid, uninstall first. Nothing secret is ever in this repository; `*.jks`, `*.keystore` and `key.properties` are git-ignored.
 
 ## Versioning
 
@@ -21,6 +21,7 @@ The Android builds have different signers, so a phone can't update one with anot
 | Key | File (outside the repo) | Alias | Gradle properties |
 |---|---|---|---|
 | Release key | `~/.android-keys/kickfile-release.jks` | `kickfile` | `kickfile.release.*` |
+| Play upload key | `~/.android-keys/kickfile-upload.jks` | `kickfile-upload` | `kickfile.upload.*` |
 
 ```bash
 mkdir -p ~/.android-keys && chmod 700 ~/.android-keys
@@ -38,7 +39,7 @@ kickfile.release.keyAlias=kickfile
 kickfile.release.keyPassword=<password>
 ```
 
-Without them, release builds are unsigned (that's what CI and F-Droid do).
+Without them, release builds are unsigned (that's what CI and F-Droid do). The upload key's `kickfile.upload.*` properties follow the same pattern; both keys are backed up in `secrets-vault`.
 
 **Back up the key and its password together** (password manager plus one offline copy). Losing the key means GitHub installs can never be updated again.
 
@@ -48,7 +49,8 @@ Check an APK with `apksigner verify --print-certs kickFile-android.apk`.
 
 | Certificate | SHA-256 |
 |---|---|
-| Release key (`kickfile`): GitHub Releases APKs | `AC:55:3F:B6:F2:8C:10:44:20:47:F1:7C:72:B4:86:AA:AA:63:78:8F:3F:43:CE:58:B9:27:01:84:5A:97:B8:04` |
+| Release key (`kickfile`): GitHub Releases APKs, and Play installs (Play App Signing) | `AC:55:3F:B6:F2:8C:10:44:20:47:F1:7C:72:B4:86:AA:AA:63:78:8F:3F:43:CE:58:B9:27:01:84:5A:97:B8:04` |
+| Upload key (`kickfile-upload`): only the bundles uploaded to Play | `1D:36:AB:76:13:D6:74:7A:BD:83:1D:20:AD:C7:DB:3B:50:5A:2A:65:0B:57:20:46:AC:FE:42:10:55:F1:D3:94` |
 | F-Droid signing key: F-Droid installs | *from the F-Droid package page after the first F-Droid build* |
 
 ## Every release
@@ -71,6 +73,12 @@ Check an APK with `apksigner verify --print-certs kickFile-android.apk`.
    gh release upload vX.Y.Z <apks> --clobber
    ```
    Asset names have no version, so `releases/latest/download/<name>` links on the site and in the app keep working.
-5. **Archive** the files in `~/Desktop/PersonalProjects/builds/kickfile/X.Y.Z/` with `builds/archive-build.sh` (maintainer machine only; never committed).
-6. **Publish** the draft release. The site redeploys by itself when `site/` changes on `main`.
-7. **F-Droid** (first time): copy `fdroid/io.github.ukpratik.kickfile.yml` into a merge request on [fdroiddata](https://gitlab.com/fdroid/fdroiddata), with `commit:` set to the tag's commit hash. Later releases are picked up automatically from the tags (`UpdateCheckMode: Tags`).
+5. **Google Play bundle**, from the tag, signed with the upload key:
+   ```bash
+   cd app
+   flutter build appbundle --release --android-project-arg=kickfilePlay=true
+   ```
+   Upload `build/app/outputs/bundle/release/app-release.aab` in Play Console (Internal testing first, then Production). The R8 mapping travels inside the bundle.
+6. **Archive** the files in `~/Desktop/PersonalProjects/builds/kickfile/X.Y.Z/` with `builds/archive-build.sh` (maintainer machine only; never committed).
+7. **Publish** the draft release. The site redeploys by itself when `site/` changes on `main`.
+8. **F-Droid** (first time): copy `fdroid/io.github.ukpratik.kickfile.yml` into a merge request on [fdroiddata](https://gitlab.com/fdroid/fdroiddata), with `commit:` set to the tag's commit hash. Later releases are picked up automatically from the tags (`UpdateCheckMode: Tags`).
